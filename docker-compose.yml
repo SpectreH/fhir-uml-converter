@@ -22,7 +22,7 @@ services:
     depends_on:
       - converter
     ports:
-      - "8080:8080"
+      - 8080:8080
 
     # Тоже может читать/писать в общий volume
     volumes:
