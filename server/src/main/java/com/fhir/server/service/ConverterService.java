@@ -24,6 +24,8 @@ public class ConverterService {
         Files.writeString(inputFile, body, StandardCharsets.UTF_8);
 
         ProcessBuilder pb = new ProcessBuilder(
+                "docker",
+                "exec",
                 "java",
                 "-jar",
                 converterJarName,
