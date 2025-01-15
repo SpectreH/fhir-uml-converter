@@ -1,0 +1,32 @@
+version: '3'
+services:
+  converter:
+    build:
+      context: ./converter
+      dockerfile: Dockerfile
+    container_name: converter
+    
+    # Если нужно, чтобы контейнер не завершался, оставляем этот command
+    # (если уже прописано CMD ["tail", "-f", "/dev/null"] в Dockerfile, можно убрать)
+    command: ["tail", "-f", "/dev/null"]
+
+    # Пример монтирования общего тома, если нужно совместное использование файлов
+    volumes:
+      - shared-data:/data
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: server
+    depends_on:
+      - converter
+    ports:
+      - "8080:8080"
+
+    # Тоже может читать/писать в общий volume
+    volumes:
+      - shared-data:/data
+
+volumes:
+  shared-data:
