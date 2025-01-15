@@ -62,19 +62,19 @@ jobs:
       - name: Login to Docker Registry
         run: |
           echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+      - name: Build & Push Server Image
+        run: |
+          cd server
+          docker build -t neeoo/fhir-server:latest .
+          docker push neeoo/fhir-server:latest
+          cd ..
   
       - name: Build & Push Converter Image
         run: |
           cd converter
-          # Теперь в converter/build/libs/ у нас есть jar, загруженный выше
           docker build -t neeoo/fhir-converter:latest .
           docker push neeoo/fhir-converter:latest
-  
-      - name: Build & Push Server Image
-        run: |
-          cd ../server
-          docker build -t neeoo/fhir-server:latest .
-          docker push neeoo/fhir-server:latest
           
   deploy:
     needs: dockerize
