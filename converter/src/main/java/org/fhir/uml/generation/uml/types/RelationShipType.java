@@ -1,0 +1,5 @@
+package org.fhir.uml.generation.uml.types;
+
+public enum RelationShipType {
+        ASSOCIATION, DIRECTED_ASSOCIATION, AGGREGATION, COMPOSITION, DEPENDENCY, MULTIPLICITY, INHERITANCE, IMPLEMENTATION
+}
