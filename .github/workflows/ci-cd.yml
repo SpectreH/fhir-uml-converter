@@ -20,11 +20,11 @@ jobs:
       - name: Build converter
         run: |
           cd converter
-          ./gradlew build
+          ./gradlew clean build
       - name: Build server
         run: |
           cd server
-          ./gradlew build
+          ./gradlew clean build
   
   dockerize:
     needs: build-and-test
