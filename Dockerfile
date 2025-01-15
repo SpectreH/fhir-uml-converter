@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine
 
-RUN apt install graphviz
+RUN apk add --no-cache graphviz
 
 WORKDIR /app
 
