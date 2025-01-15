@@ -21,10 +21,12 @@ jobs:
         run: |
           cd converter
           ./gradlew clean build
+          ls -l build/libs
       - name: Build server
         run: |
           cd server
           ./gradlew clean build
+          ls -l build/libs
   
   dockerize:
     needs: build-and-test
@@ -40,12 +42,14 @@ jobs:
       - name: Build & Push Converter Image
         run: |
           cd converter
+          ls -l build/libs
           docker build -t neeoo/fhir-converter:latest .
           docker push neeoo/fhir-converter:latest
 
       - name: Build & Push Server Image
         run: |
           cd server
+          ls -l build/libs
           docker build -t neeoo/fhir-server:latest .
           docker push neeoo/fhir-server:latest
 
