@@ -27,6 +27,18 @@ jobs:
           cd server
           ./gradlew clean build
           ls -l build/libs
+          
+      - name: Upload converter artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: converter-build
+          path: converter/build/libs
+  
+      - name: Upload server artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: server-build
+          path: server/build/libs
   
   dockerize:
     needs: build-and-test
@@ -34,25 +46,36 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v3
-
+  
+      - name: Download converter artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: converter-build
+          path: converter/build/libs
+  
+      - name: Download server artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: server-build
+          path: server/build/libs
+  
       - name: Login to Docker Registry
         run: |
           echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
-
+  
       - name: Build & Push Converter Image
         run: |
           cd converter
-          ls -l build/libs
+          # Теперь в converter/build/libs/ у нас есть jar, загруженный выше
           docker build -t neeoo/fhir-converter:latest .
           docker push neeoo/fhir-converter:latest
-
+  
       - name: Build & Push Server Image
         run: |
-          cd server
-          ls -l build/libs
+          cd ../server
           docker build -t neeoo/fhir-server:latest .
           docker push neeoo/fhir-server:latest
-
+          
   deploy:
     needs: dockerize
     runs-on: ubuntu-latest
