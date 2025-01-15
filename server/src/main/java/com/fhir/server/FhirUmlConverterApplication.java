@@ -1,4 +1,4 @@
-package com.example.fhir_uml_converter;
+package com.fhir.server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

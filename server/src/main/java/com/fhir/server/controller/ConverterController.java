@@ -1,16 +1,15 @@
-package com.example.fhir_uml_converter.controller;
+package com.fhir.server.controller;
 
-import com.example.fhir_uml_converter.service.ConverterService;
-import com.example.fhir_uml_converter.util.BodyMediaType;
-import com.example.fhir_uml_converter.util.ContentDispositionType;
-import com.example.fhir_uml_converter.util.ViewMode;
+import com.fhir.server.service.ConverterService;
+import com.fhir.server.util.BodyMediaType;
+import com.fhir.server.util.ContentDispositionType;
+import com.fhir.server.util.ViewMode;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController

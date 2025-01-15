@@ -3,6 +3,6 @@ FROM eclipse-temurin:17-jdk-alpine
 
 WORKDIR /app
 
-COPY converter.jar /app/converter.jar
+COPY build/libs/fhir-uml-generation.jar /app/converter.jar
 
 CMD ["tail", "-f", "/dev/null"]

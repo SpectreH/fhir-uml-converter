@@ -1,6 +1,6 @@
-package com.example.fhir_uml_converter.service;
+package com.fhir.server.service;
 
-import com.example.fhir_uml_converter.util.ViewMode;
+import com.fhir.server.util.ViewMode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;

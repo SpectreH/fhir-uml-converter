@@ -1,4 +1,4 @@
-package com.example.fhir_uml_converter.controller;
+package com.fhir.server.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.example.fhir_uml_converter.util;
+package com.fhir.server.util;
 
 public enum ContentDispositionType {
     INLINE("inline"),
