@@ -5,7 +5,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # 1) Сборка и тесты
   build-and-test:
     runs-on: ubuntu-latest
     steps:
@@ -21,11 +20,11 @@ jobs:
       - name: Build converter
         run: |
           cd converter
-          ./gradlew clean build
+          ./gradlew build
       - name: Build server
         run: |
           cd server
-          ./gradlew clean build
+          ./gradlew build
   
   dockerize:
     needs: build-and-test
