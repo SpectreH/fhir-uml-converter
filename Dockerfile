@@ -1,5 +1,7 @@
 FROM eclipse-temurin:21-jdk-alpine
 
+RUN apt install graphviz
+
 WORKDIR /app
 
 COPY server/build/libs/fhir-uml-converter.jar /app/server.jar
