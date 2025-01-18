@@ -45,6 +45,7 @@ public class ElementFactory {
      * `this.fixedValues` or `this.legend`.
      */
     public Element fromElementDefinition(ElementDefinition elementDefinition) {
+        boolean choisesOfTypesHeader = false;
         Integer commentId = null;
         String path = elementDefinition.getPath();
         String id = elementDefinition.getId();
@@ -56,6 +57,10 @@ public class ElementFactory {
         Cardinality extractedCardinality = new Cardinality(min, max);
 
         String extractedType = Element.resolveType(elementDefinition);
+
+        if (elementDefinition.getType().size() > 1) {
+            choisesOfTypesHeader = true;
+        }
 
         if (elementDefinition.hasFixed()) {
             Type fixedType = elementDefinition.getFixed();
@@ -123,6 +128,8 @@ public class ElementFactory {
                 .definition(elementDefinition)
                 .commentId(commentId)
                 .fixedValue(commentId != null)
+                .choiseOfTypeHeader(choisesOfTypesHeader)
+                .choiseOfTypeElement(false)
                 .build();
     }
 

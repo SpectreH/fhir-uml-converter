@@ -118,6 +118,6 @@ public class Relation {
 
     @Override
     public String toString() {
-        return String.format("\"%s\" --o \"%s\" \"%s\" : **%s**\n", this.from.matchTitle(), getCardinality().relationString(), getTo().matchTitle(), getRelationLabel());
+        return String.format("\"%s\" --o \"%s\" \"%s\" : **%s**\n", getFrom().matchTitle(), getCardinality().relationString(), getTo().matchTitle(), getRelationLabel());
     }
 }

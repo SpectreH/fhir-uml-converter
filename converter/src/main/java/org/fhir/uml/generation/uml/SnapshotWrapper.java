@@ -1,6 +1,7 @@
 package org.fhir.uml.generation.uml;
 
 import net.sourceforge.plantuml.SourceStringReader;
+import net.sourceforge.plantuml.StringUtils;
 import org.fhir.uml.generation.uml.elements.*;
 import org.fhir.uml.generation.uml.types.RelationShipType;
 import org.hl7.fhir.r4.model.StructureDefinition;
@@ -33,13 +34,12 @@ public class SnapshotWrapper {
                 continue;
             }
 
-            UMLClass umlClass = new UMLClass(umlElement.getType(), umlElement.getName(), umlElement.isSliceHeader());
+            UMLClass umlClass = new UMLClass(umlElement.getType(), umlElement.getName(), umlElement, parentUmlElement);
             entry.getValue().forEach(umlClass::addElement);
             UML.addClass(umlClass);
 
-            UMLClass parentUmlClass = UML.findClassByTitle(
-                    String.format("%s (%s)", parentUmlElement.getType(), parentUmlElement.getName())
-            );
+            UMLClass parentUmlClass = UML.findClassByElement(parentUmlElement);
+
             if (parentUmlClass != null && !parentUmlClass.equals(umlClass)) {
                 UML.addRelation(Relation.from(
                         parentUmlClass,
@@ -99,5 +99,14 @@ public class SnapshotWrapper {
         elementMapper.put(id, umlElement);
         snapshotTableMap.computeIfAbsent(umlElement.getParentId(), k -> new ArrayList<>())
                 .add(umlElement);
+
+        if (umlElement.isChoiseOfTypeHeader()) {
+            umlElement.getDefinition().getType().forEach(type -> {
+                String choiseId = umlElement.getElementId() + "." + type.getCode();
+                Element choiseUML = new Element.Builder().choiseOfTypeElement(true).name(umlElement.getName().replace("[x]", "") + StringUtils.capitalize(type.getCode())).type(type.getCode()).build();
+                snapshotTableMap.computeIfAbsent(umlElement.getElementId(), k -> new ArrayList<>()).add(choiseUML);
+                elementMapper.put(choiseId, choiseUML);
+            });
+        }
     }
 }

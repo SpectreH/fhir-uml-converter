@@ -1,9 +1,6 @@
 package org.fhir.uml.generation.uml;
 
-import org.fhir.uml.generation.uml.elements.Cardinality;
-import org.fhir.uml.generation.uml.elements.Legend;
-import org.fhir.uml.generation.uml.elements.Relation;
-import org.fhir.uml.generation.uml.elements.UMLClass;
+import org.fhir.uml.generation.uml.elements.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +30,15 @@ public class UML {
     public UMLClass findClassByTitle(String title) {
         for (UMLClass umlClass : classes) {
             if (umlClass.getTitle().equals(title)) {
+                return umlClass;
+            }
+        }
+        return null;
+    }
+
+    public UMLClass findClassByElement(Element element) {
+        for (UMLClass umlClass : classes) {
+            if (umlClass.getMainElement().equals(element)) {
                 return umlClass;
             }
         }

@@ -1,33 +1,39 @@
 package org.fhir.uml.generation.uml.elements;
 
-import org.hl7.fhir.r4.model.ElementDefinition;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class UMLClass {
     private String title;
     private String type;
     private String name;
     private List<Element> elements;
-    private Boolean isSliceHeader = false;
+    private Element mainElement;
+    private Element parentElement;
 
-    public UMLClass(String type, String name, Boolean isSliceHeader) {
+    public UMLClass(String type, String name, Element mainElement, Element parentElement) {
         this.title = String.format("%s (%s)", type, name);
         this.type = type;
         this.name = name;
         this.elements = new ArrayList<>();
-        this.isSliceHeader = isSliceHeader;
+        this.mainElement = mainElement;
+        this.parentElement = parentElement;
+    }
+
+    public Element getMainElement() {
+        return mainElement;
+    }
+
+    public Element getParentElement() {
+        return parentElement;
     }
 
     public Boolean isSliceHeader() {
-        return this.isSliceHeader;
+        return this.mainElement.isSliceHeader();
     }
 
-    public void setSliceHeader(Boolean sliceHeader) {
-        this.isSliceHeader = sliceHeader;
+    public Boolean isChoiseOfTypeHeader() {
+        return this.mainElement.isChoiseOfTypeHeader();
     }
 
     public String getTitle() {
@@ -57,8 +63,12 @@ public class UMLClass {
 
     private String matchCustomClass() {
         StringBuilder sb = new StringBuilder();
-        if (this.isSliceHeader) {
+        if (this.isSliceHeader()) {
             return sb.append("<< (").append("S").append(",").append("#FF7700").append(") ").append("Slices").append(" >>").toString();
+        }
+
+        if (this.isChoiseOfTypeHeader()) {
+            return sb.append("<< (").append("C").append(",").append("#1892ba").append(") ").append("Choise of Types").append(" >>").toString();
         }
 
         return sb.toString();
@@ -77,8 +87,12 @@ public class UMLClass {
     }
 
     public String matchTitle() {
-        if (this.isSliceHeader) {
-            return String.format("Slices for %s", this.name);
+        if (this.isSliceHeader()) {
+            return String.format("Slices for %s (%s)", this.name, this.parentElement.getName());
+        }
+
+        if (this.isChoiseOfTypeHeader()) {
+            return String.format("%s", this.name);
         }
 
         return title;
@@ -103,7 +117,7 @@ public class UMLClass {
 
         sb.append(matchClassType()).append(" \"").append(matchTitle()).append("\"").append(matchCustomClass()).append(" {\n");
         elements.forEach(e -> {
-            if (!e.isRemoved()) {
+            if (e.isChoiseOfTypeElement() || !e.isRemoved()) {
                 sb.append("\t").append(e).append("\n");
             }
         });

@@ -36,10 +36,6 @@ public class ElementVisualizer {
             return "N/A";
         }
 
-//        if (element.getType().size() != 1) {
-//            System.out.println("NOT ONE"); // TODO Choice of Types
-//        }
-
         return element.getType().stream()
                 .map(this::resolveTypeComponent)
                 .collect(Collectors.joining(", "));
@@ -123,7 +119,6 @@ public class ElementVisualizer {
     }
 
     public String visualizeAsAttribute() {
-        // If the element is removed, mark it in the output
         if (isRemoved()) {
             return String.format("%s (REMOVED)", path);
         }

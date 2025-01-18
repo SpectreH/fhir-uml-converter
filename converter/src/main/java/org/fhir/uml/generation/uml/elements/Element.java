@@ -21,8 +21,10 @@ public class Element {
     private Boolean isSliceHeader = false;
     private final Boolean fixedValue;
     private final Integer commentId;
+    private final Boolean choiseOfTypeHeader;
+    private final Boolean choiseOfTypeElement;
 
-    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, ElementDefinition definition, Boolean fixedValue, Integer commentId) {
+    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, ElementDefinition definition, Boolean fixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement) {
         this.name = name;
         this.type = type;
         this.visability = visability;
@@ -31,6 +33,16 @@ public class Element {
         this.definition = definition;
         this.fixedValue = fixedValue;
         this.commentId = commentId;
+        this.choiseOfTypeHeader = choiseOfTypeHeader;
+        this.choiseOfTypeElement = choiseOfTypeElement;
+    }
+
+    public Boolean isChoiseOfTypeHeader() {
+        return choiseOfTypeHeader;
+    }
+
+    public Boolean isChoiseOfTypeElement() {
+        return choiseOfTypeElement;
     }
 
     public Boolean isSliceHeader() {
@@ -130,11 +142,32 @@ public class Element {
         private ElementDefinition definition;
         private Boolean fixedValue;
         private Integer commentId;
+        private Boolean choiseOfTypeHeader;
+        private Boolean choiseOfTypeElement;
 
-        public Builder() {}
+
+        public Builder() {
+            name = "";
+            type = "";
+            description = "";
+            fixedValue = false;
+            commentId = null;
+            choiseOfTypeHeader = false;
+            choiseOfTypeElement = false;
+        }
 
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder choiseOfTypeHeader(Boolean choiseOfTypeHeader) {
+            this.choiseOfTypeHeader = choiseOfTypeHeader;
+            return this;
+        }
+
+        public Builder choiseOfTypeElement(Boolean choiseOfTypeElement) {
+            this.choiseOfTypeElement = choiseOfTypeElement;
             return this;
         }
 
@@ -174,7 +207,7 @@ public class Element {
         }
 
         public Element build() {
-            return new Element(name, type, visability, cardinality, description, definition, fixedValue, commentId);
+            return new Element(name, type, visability, cardinality, description, definition, fixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement);
         }
     }
 
@@ -182,10 +215,6 @@ public class Element {
         if (!element.hasType()) {
             return "N/A";
         }
-//
-//        if (element.getType().size() != 1) {
-//            System.out.println("NOT ONE"); // TODO Choice of Types
-//        }
 
         return element.getType().stream()
                 .map(Element::resolveTypeComponent)
@@ -258,16 +287,16 @@ public class Element {
     }
 
     public String matchVisability() {
-        switch (this.visability) {
-            case PRIVATE:
-                return "-";
-            case PROTECTED:
-                return "#";
-            case PACKAGE_PRIVATE:
-                return "~";
-            default:
-                return "+";
+        if (this.visability == null) {
+            return "+";
         }
+
+        return switch (this.visability) {
+            case PRIVATE -> "-";
+            case PROTECTED -> "#";
+            case PACKAGE_PRIVATE -> "~";
+            default -> "+";
+        };
     }
 
     public boolean isRemoved() {
@@ -276,11 +305,16 @@ public class Element {
 
     @Override
     public String toString() {
+        StringBuilder cardinalitySb = new StringBuilder();
+        if (cardinality != null) {
+            cardinalitySb.append(cardinality.toString());
+        }
+
         StringBuilder commentReference = new StringBuilder();
         if (commentId != null) {
             commentReference.append("**(").append(commentId).append(")**");
         }
 
-        return String.format("{field} %s %s : %s %s %s %s", matchVisability(), name, type, cardinality, description, commentReference.toString());
+        return String.format("{field} %s %s : %s %s %s %s", matchVisability(), name, type, cardinalitySb.toString(), description, commentReference.toString());
     }
 }
