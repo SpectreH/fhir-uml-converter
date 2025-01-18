@@ -496,10 +496,10 @@
           "code" : "canonical",
           "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/ObservationDefinition"]
         },
-          {
-            "code" : "Reference",
-            "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/ObservationDefinition"]
-          }],
+        {
+          "code" : "Reference",
+          "targetProfile" : ["http://hl7.org/fhir/StructureDefinition/ObservationDefinition"]
+        }],
         "constraint" : [{
           "key" : "ele-1",
           "severity" : "error",

@@ -30,7 +30,7 @@ public class SnapshotWrapper {
         for (Map.Entry<String, List<Element>> entry : snapshotTableMap.entrySet()) {
             Element umlElement = elementMapper.get(entry.getKey());
             Element parentUmlElement = elementMapper.get(umlElement.getParentId());
-            if (umlElement.isRemoved()) {
+            if (umlElement.isRemoved() || parentUmlElement.isRemoved()) {
                 continue;
             }
 

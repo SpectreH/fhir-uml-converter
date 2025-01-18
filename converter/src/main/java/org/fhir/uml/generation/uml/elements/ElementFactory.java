@@ -58,7 +58,7 @@ public class ElementFactory {
 
         String extractedType = Element.resolveType(elementDefinition);
 
-        if (elementDefinition.getType().size() > 1) {
+        if (elementDefinition.getType().size() > 1 && !(extractedType.contains("Reference") || extractedType.contains("canonical"))) {
             choisesOfTypesHeader = true;
         }
 
