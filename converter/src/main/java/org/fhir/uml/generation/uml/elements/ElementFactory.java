@@ -51,6 +51,7 @@ public class ElementFactory {
         String id = elementDefinition.getId();
         String[] parts = id.split("\\.|:");
         String extractedName = (parts.length == 0) ? null : parts[parts.length - 1];
+        String fixedValue = "";
 
         String min = String.valueOf(elementDefinition.getMin());
         String max = elementDefinition.getMax();
@@ -119,6 +120,10 @@ public class ElementFactory {
             visability = ElementVisability.PACKAGE_PRIVATE;
         }
 
+        if (this.fixedValues.containsKey(path)) {
+            fixedValue = fixedValues.get(path);
+        }
+
         return new Element.Builder()
                 .name(extractedName)
                 .type(extractedType)
@@ -127,7 +132,8 @@ public class ElementFactory {
                 .description("")
                 .definition(elementDefinition)
                 .commentId(commentId)
-                .fixedValue(commentId != null)
+                .hasFixedValue(commentId != null)
+                .fixedValue(fixedValue)
                 .choiseOfTypeHeader(choisesOfTypesHeader)
                 .choiseOfTypeElement(false)
                 .build();

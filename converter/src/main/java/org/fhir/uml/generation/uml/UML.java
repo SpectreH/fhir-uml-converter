@@ -78,7 +78,7 @@ public class UML {
 
         }
 
-        sb.append(this.legend.toString());
+//        sb.append(this.legend.toString());
 
         sb.append("@enduml");
         return sb.toString();

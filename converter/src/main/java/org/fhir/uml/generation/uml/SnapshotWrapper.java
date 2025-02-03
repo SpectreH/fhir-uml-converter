@@ -4,6 +4,8 @@ import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.StringUtils;
 import org.fhir.uml.generation.uml.elements.*;
 import org.fhir.uml.generation.uml.types.RelationShipType;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r4.model.ElementDefinition;
 

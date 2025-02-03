@@ -19,22 +19,24 @@ public class Element {
     private final ElementDefinition definition;
     private Boolean isMain = false;
     private Boolean isSliceHeader = false;
-    private final Boolean fixedValue;
+    private final Boolean hasFixedValue;
+    private final String fixedValue;
     private final Integer commentId;
     private final Boolean choiseOfTypeHeader;
     private final Boolean choiseOfTypeElement;
 
-    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, ElementDefinition definition, Boolean fixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement) {
+    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, ElementDefinition definition, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue) {
         this.name = name;
         this.type = type;
         this.visability = visability;
         this.cardinality = cardinality;
         this.description = description;
         this.definition = definition;
-        this.fixedValue = fixedValue;
+        this.hasFixedValue = hasFixedValue;
         this.commentId = commentId;
         this.choiseOfTypeHeader = choiseOfTypeHeader;
         this.choiseOfTypeElement = choiseOfTypeElement;
+        this.fixedValue = fixedValue;
     }
 
     public Boolean isChoiseOfTypeHeader() {
@@ -140,20 +142,22 @@ public class Element {
         private Cardinality cardinality;
         private String description;
         private ElementDefinition definition;
-        private Boolean fixedValue;
+        private Boolean hasFixedValue;
         private Integer commentId;
         private Boolean choiseOfTypeHeader;
         private Boolean choiseOfTypeElement;
+        private String fixedValue;
 
 
         public Builder() {
             name = "";
             type = "";
             description = "";
-            fixedValue = false;
+            hasFixedValue = false;
             commentId = null;
             choiseOfTypeHeader = false;
             choiseOfTypeElement = false;
+            fixedValue = "";
         }
 
         public Builder name(String name) {
@@ -196,8 +200,8 @@ public class Element {
             return this;
         }
 
-        public Builder fixedValue(Boolean fixedValue) {
-            this.fixedValue = fixedValue;
+        public Builder hasFixedValue(Boolean hasFixedValue) {
+            this.hasFixedValue = hasFixedValue;
             return this;
         }
 
@@ -206,8 +210,13 @@ public class Element {
             return this;
         }
 
+        public Builder fixedValue(String fixedValue) {
+            this.fixedValue = fixedValue;
+            return this;
+        }
+
         public Element build() {
-            return new Element(name, type, visability, cardinality, description, definition, fixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement);
+            return new Element(name, type, visability, cardinality, description, definition, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue);
         }
     }
 
@@ -311,10 +320,15 @@ public class Element {
         }
 
         StringBuilder commentReference = new StringBuilder();
-        if (commentId != null) {
-            commentReference.append("**(").append(commentId).append(")**");
+//        if (commentId != null) {
+//            commentReference.append("**(").append(commentId).append(")**");
+//        }
+
+        StringBuilder fixedValueSb = new StringBuilder();
+        if (hasFixedValue) {
+            fixedValueSb.append("= ").append("**").append(fixedValue).append("**");
         }
 
-        return String.format("{field} %s %s : %s %s %s %s", matchVisability(), name, type, cardinalitySb.toString(), description, commentReference.toString());
+        return String.format("{field} %s %s : %s %s %s %s %s", matchVisability(), name, type, fixedValueSb.toString(), cardinalitySb.toString(), description, commentReference.toString());
     }
 }
