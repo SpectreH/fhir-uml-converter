@@ -4,134 +4,144 @@ skinparam wrapwidth 500
 left to right direction
 
 class "Patient (Patient)" {
-	{field} + id : id  [0..1]  
-	{field} + meta : Meta  [0..1]  
-	{field} + implicitRules : uri  [0..1]  
-	{field} + language : code  [0..1]  
-	{field} + text : Narrative  [0..1]  
-	{field} + contained : Resource  [0..*]  
-	{field} + extension : Extension  [0..*]  
-	{field} + modifierExtension : Extension  [0..*]  
-	{field} + identifier : Identifier  [1..*]  
-	{field} + active : boolean  [1..1]  
-	{field} + name : HumanName  [0..*]  
-	{field} + telecom : ContactPoint  [0..*]  
-	{field} + gender : code  [0..1]  
-	{field} + birthDate : date  [0..1]  
-	{field} + deceased[x] : boolean, dateTime  [0..1]  
-	{field} + address : Address  [0..*]  
-	{field} + maritalStatus : CodeableConcept  [0..1]  
-	{field} + multipleBirth[x] : boolean, integer  [0..1]  
-	{field} + photo : Attachment  [0..*]  
-	{field} + contact : BackboneElement  [0..*]  
-	{field} + communication : BackboneElement  [0..*]  
-	{field} ~ generalPractitioner : Reference(ee-practitioner | ee-practitioner-role)  [0..*]  
-	{field} ~ managingOrganization : Reference(ee-organization)  [0..1]  
-	{field} + link : BackboneElement  [0..*]  
+	--Profile Parent Element Data--
+	{field} - Patient : Patient  [0..*]
+	--Profile Children Elements--
+	{field} + id : id  [0..1]
+	{field} + meta : Meta  [0..1]
+	{field} + implicitRules : uri  [0..1]
+	{field} + language : code  [0..1]
+	{field} + text : Narrative  [0..1]
+	{field} + contained : Resource  [0..*]
+	{field} + extension : Extension  [0..*]
+	{field} + modifierExtension : Extension  [0..*]
+	{field} + identifier : Identifier  [1..*]
+	{field} + active : boolean  [1..1]
+	{field} + name : HumanName  [0..*]
+	{field} + telecom : ContactPoint  [0..*]
+	{field} + gender : code  [0..1]
+	{field} + birthDate : date  [0..1]
+	{field} + deceased[x] : boolean, dateTime  [0..1]
+	{field} + address : Address  [0..*]
+	{field} + maritalStatus : CodeableConcept  [0..1]
+	{field} + multipleBirth[x] : boolean, integer  [0..1]
+	{field} + photo : Attachment  [0..*]
+	{field} + contact : BackboneElement  [0..*]
+	{field} + communication : BackboneElement  [0..*]
+	{field} ~ generalPractitioner : Reference(ee-practitioner | ee-practitioner-role)  [0..*]
+	{field} ~ managingOrganization : Reference(ee-organization)  [0..1]
+	{field} + link : BackboneElement  [0..*]
 }
 class "Identifier (identifier)" {
-	{field} + id : id  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + use : code  [0..1]  
-	{field} + type : CodeableConcept  [0..1]  
-	{field} + system : uri  [1..1]  
-	{field} + value : string  [1..1]  
-	{field} + period : Period  [0..1]  
-	{field} ~ assigner : Reference(Organization)  [0..1]  
+	{field} + id : id  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + use : code  [0..1]
+	{field} + type : CodeableConcept  [0..1]
+	{field} + system : uri  [1..1]
+	{field} + value : string  [1..1]
+	{field} + period : Period  [0..1]
+	{field} ~ assigner : Reference(Organization)  [0..1]
 }
 class "Slices for name (Patient)"<< (S,#FF7700) Slices >> {
-	{field} + id : id  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + use : code  [1..1]  
-	{field} + text : string  [0..1]  
-	{field} + family : string  [0..1]  
-	{field} + given : string  [0..*]  
-	{field} + prefix : string  [0..*]  
-	{field} + suffix : string  [0..*]  
-	{field} + period : Period  [0..1]  
-	{field} + official : HumanName  [0..1]  
-	{field} + nickname : HumanName  [0..1]  
+	--Content/Rules for all slices--
+	{field} + id : id  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + use : code  [1..1]
+	{field} + text : string  [0..1]
+	{field} + family : string  [0..1]
+	{field} + given : string  [0..*]
+	{field} + prefix : string  [0..*]
+	{field} + suffix : string  [0..*]
+	{field} + period : Period  [0..1]
+	--Slices--
+	{field} + official : HumanName  [0..1]
+	{field} + nickname : HumanName  [0..1]
 }
 class "HumanName (official)" {
-	{field} + id : id  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} # use : code = **official** [0..1]  
-	{field} + text : string  [0..1]  
-	{field} + family : string  [1..1]  
-	{field} + given : string  [1..1]  
-	{field} + prefix : string  [0..1]  
-	{field} + suffix : string  [0..*]  
-	{field} + period : Period  [0..1]  
+	{field} + id : id  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} # use : code = **official** [0..1]
+	{field} + text : string  [0..1]
+	{field} + family : string  [1..1]
+	{field} + given : string  [1..1]
+	{field} + prefix : string  [0..1]
+	{field} + suffix : string  [0..*]
+	{field} + period : Period  [0..1]
 }
 class "HumanName (nickname)" {
-	{field} + id : id  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} # use : code = **nickname** [0..1]  
-	{field} + text : string  [1..1]  
-	{field} + period : Period  [0..1]  
+	{field} + id : id  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} # use : code = **nickname** [0..1]
+	{field} + text : string  [1..1]
+	{field} + period : Period  [0..1]
 }
 class "ContactPoint (telecom)" {
-	{field} + id : id  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + system : code  [1..1]  
-	{field} + value : string  [1..1]  
-	{field} + use : code  [0..1]  
-	{field} + rank : positiveInt  [0..1]  
-	{field} + period : Period  [0..1]  
+	{field} + id : id  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + system : code  [1..1]
+	{field} + value : string  [1..1]
+	{field} + use : code  [0..1]
+	{field} + rank : positiveInt  [0..1]
+	{field} + period : Period  [0..1]
 }
 class "date (birthDate)" {
-	{field} + id : string  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + value : date  [0..1]  
+	{field} + id : string  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + value : date  [0..1]
 }
 class "Slices for extension (birthDate)"<< (S,#FF7700) Slices >> {
-	{field} + birthTime : Extension  [0..1]  
-	{field} + age : Extension  [0..1]  
-	{field} + accuracyIndicator : Extension  [0..1]  
+	--Slices--
+	{field} + birthTime : Extension  [0..1]
+	{field} + age : Extension  [0..1]
+	{field} + accuracyIndicator : Extension  [0..1]
 }
 class "Extension (birthTime)" {
-	{field} + id : id  [0..1]  
-	{field} # url : uri = **http://hl7.org/fhir/StructureDefinition/patient-birthTime** [1..1]  
-	{field} + value[x] : dateTime  [1..1]  
+	{field} + id : id  [0..1]
+	{field} # url : uri = **http://hl7.org/fhir/StructureDefinition/patient-birthTime** [1..1]
+	{field} + value[x] : dateTime  [1..1]
 }
 class "deceased[x]"<< (C,#1892ba) Choise of Types >> {
-	{field} + deceasedBoolean : boolean    
-	{field} + deceasedDatetime : dateTime    
-	{field} + id : string  [0..1]  
-	{field} + extension : Extension  [0..*]  
+	--Content/Rules for all slices--
+	{field} + id : string  [0..1]
+	{field} + extension : Extension  [0..*]
+	--Types--
+	{field} + deceasedBoolean : boolean
+	{field} + deceasedDatetime : dateTime
 }
 class "Slices for extension (deceased[x])"<< (S,#FF7700) Slices >> {
-	{field} + accuracyIndicator : Extension  [0..1]  
+	--Slices--
+	{field} + accuracyIndicator : Extension  [0..1]
 }
 class "multipleBirth[x]"<< (C,#1892ba) Choise of Types >> {
-	{field} + multipleBirthBoolean : boolean    
-	{field} + multipleBirthInteger : integer    
+	--Types--
+	{field} + multipleBirthBoolean : boolean
+	{field} + multipleBirthInteger : integer
 }
 struct "BackboneElement (contact)" {
-	{field} + id : string  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + modifierExtension : Extension  [0..*]  
-	{field} + relationship : CodeableConcept  [0..*]  
-	{field} + name : HumanName  [0..1]  
-	{field} + telecom : ContactPoint  [0..*]  
-	{field} + address : Address  [0..1]  
-	{field} + gender : code  [0..1]  
-	{field} ~ organization : Reference(ee-organization)  [0..1]  
-	{field} + period : Period  [0..1]  
+	{field} + id : string  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + modifierExtension : Extension  [0..*]
+	{field} + relationship : CodeableConcept  [0..*]
+	{field} + name : HumanName  [0..1]
+	{field} + telecom : ContactPoint  [0..*]
+	{field} + address : Address  [0..1]
+	{field} + gender : code  [0..1]
+	{field} ~ organization : Reference(ee-organization)  [0..1]
+	{field} + period : Period  [0..1]
 }
 struct "BackboneElement (communication)" {
-	{field} + id : string  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + modifierExtension : Extension  [0..*]  
-	{field} + language : CodeableConcept  [1..1]  
-	{field} + preferred : boolean  [0..1]  
+	{field} + id : string  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + modifierExtension : Extension  [0..*]
+	{field} + language : CodeableConcept  [1..1]
+	{field} + preferred : boolean  [0..1]
 }
 struct "BackboneElement (link)" {
-	{field} + id : string  [0..1]  
-	{field} + extension : Extension  [0..*]  
-	{field} + modifierExtension : Extension  [0..*]  
-	{field} ~ other : Reference(ee-patient | ee-related-person)  [1..1]  
-	{field} + type : code  [1..1]  
+	{field} + id : string  [0..1]
+	{field} + extension : Extension  [0..*]
+	{field} + modifierExtension : Extension  [0..*]
+	{field} ~ other : Reference(ee-patient | ee-related-person)  [1..1]
+	{field} + type : code  [1..1]
 }
 "Patient (Patient)" --o "1..*" "Identifier (identifier)" : **identifier**
 "Patient (Patient)" --o "0..*" "Slices for name (Patient)" : **name**

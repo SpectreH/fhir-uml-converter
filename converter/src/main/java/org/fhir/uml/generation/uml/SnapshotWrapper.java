@@ -23,6 +23,7 @@ public class SnapshotWrapper {
     private final ElementFactory factory = ElementFactory.init(legend);
 
     public SnapshotWrapper(StructureDefinition structureDefinition) throws Exception {
+        boolean firstClassPassed = false;
         this.resourceName = structureDefinition.getName();
         this.baseDefinition = structureDefinition.getBaseDefinition().substring(
                 structureDefinition.getBaseDefinition().lastIndexOf('/') + 1
@@ -36,7 +37,14 @@ public class SnapshotWrapper {
                 continue;
             }
 
+            System.out.printf("Class Type: %s | Name: %s\n", umlElement.getType(), umlElement.getName());
             UMLClass umlClass = new UMLClass(umlElement.getType(), umlElement.getName(), umlElement, parentUmlElement);
+
+            if (!firstClassPassed) {
+                firstClassPassed = true;
+                umlClass.setMainClass(true);
+            }
+
             entry.getValue().forEach(umlClass::addElement);
             UML.addClass(umlClass);
 
@@ -85,15 +93,15 @@ public class SnapshotWrapper {
         String id = element.getId();
         Element umlElement = factory.fromElementDefinition(element);
 
-        if (id.contains(":")) {
-            elementMapper.get(umlElement.getSliceParentId()).setSliceHeader(true);
+        if (!element.getSlicing().getDiscriminator().isEmpty()) {
+            umlElement.setSliceHeader(true);
         }
 
         if (!firstElementProcessed) {
             firstElementProcessed = true;
             umlElement.setType(baseDefinition);
             umlElement.setIsMain(true);
-            snapshotTableMap.computeIfAbsent(umlElement.getParentId(), k -> new ArrayList<>());
+            snapshotTableMap.computeIfAbsent(umlElement.getParentId(), k -> new ArrayList<>()).add(umlElement);
             elementMapper.put(id, umlElement);
             return;
         }
@@ -103,9 +111,9 @@ public class SnapshotWrapper {
                 .add(umlElement);
 
         if (umlElement.isChoiseOfTypeHeader()) {
-            umlElement.getDefinition().getType().forEach(type -> {
-                String choiseId = umlElement.getElementId() + "." + type.getCode();
-                Element choiseUML = new Element.Builder().choiseOfTypeElement(true).name(umlElement.getName().replace("[x]", "") + StringUtils.capitalize(type.getCode())).type(type.getCode()).build();
+            Arrays.stream(umlElement.getType().split(", ")).forEach(type -> {
+                String choiseId = umlElement.getElementId() + "." + type;
+                Element choiseUML = new Element.Builder().choiseOfTypeElement(true).name(umlElement.getName().replace("[x]", "") + StringUtils.capitalize(type)).type(type).build();
                 snapshotTableMap.computeIfAbsent(umlElement.getElementId(), k -> new ArrayList<>()).add(choiseUML);
                 elementMapper.put(choiseId, choiseUML);
             });

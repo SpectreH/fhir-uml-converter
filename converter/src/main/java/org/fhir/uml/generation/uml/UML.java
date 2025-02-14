@@ -8,6 +8,7 @@ import java.util.List;
 public class UML {
     private final LinkedList<UMLClass> classes;
     private final LinkedList<Relation> relations;
+    private UMLClass mainClass;
     private Legend legend;
 
     public UML() {
@@ -18,6 +19,10 @@ public class UML {
     public void addClass(UMLClass umlClass) {
         if (umlClass != null) {
             this.classes.add(umlClass);
+
+            if (umlClass.isMainClass()) {
+                mainClass = umlClass;
+            }
         }
     }
 
@@ -43,6 +48,14 @@ public class UML {
             }
         }
         return null;
+    }
+
+    public UMLClass getMainClass() {
+        return mainClass;
+    }
+
+    public void setMainClass(UMLClass mainClass) {
+        this.mainClass = mainClass;
     }
 
     public List<UMLClass> getClasses() {
@@ -78,7 +91,7 @@ public class UML {
 
         }
 
-//        sb.append(this.legend.toString());
+        sb.append(this.legend.toString());
 
         sb.append("@enduml");
         return sb.toString();

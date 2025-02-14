@@ -130,12 +130,13 @@ public class ElementFactory {
                 .visability(visability)
                 .cardinality(extractedCardinality)
                 .description("")
-                .definition(elementDefinition)
                 .commentId(commentId)
                 .hasFixedValue(commentId != null)
                 .fixedValue(fixedValue)
                 .choiseOfTypeHeader(choisesOfTypesHeader)
                 .choiseOfTypeElement(false)
+                .id(elementDefinition.getId())
+                .hasSliceName(elementDefinition.getSliceName() != null && !elementDefinition.getSliceName().isEmpty())
                 .build();
     }
 

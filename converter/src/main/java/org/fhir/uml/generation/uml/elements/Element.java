@@ -16,7 +16,7 @@ public class Element {
     private final ElementVisability visability;
     private final Cardinality cardinality;
     private final String description;
-    private final ElementDefinition definition;
+    // private final ElementDefinition definition;
     private Boolean isMain = false;
     private Boolean isSliceHeader = false;
     private final Boolean hasFixedValue;
@@ -24,19 +24,36 @@ public class Element {
     private final Integer commentId;
     private final Boolean choiseOfTypeHeader;
     private final Boolean choiseOfTypeElement;
+    private String id;
+    private String path;
+    private Boolean hasSliceName;
 
-    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, ElementDefinition definition, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue) {
+    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue, String id, Boolean hasSliceName) {
         this.name = name;
         this.type = type;
         this.visability = visability;
         this.cardinality = cardinality;
         this.description = description;
-        this.definition = definition;
         this.hasFixedValue = hasFixedValue;
         this.commentId = commentId;
         this.choiseOfTypeHeader = choiseOfTypeHeader;
         this.choiseOfTypeElement = choiseOfTypeElement;
         this.fixedValue = fixedValue;
+        this.id = id;
+        this.path = "";
+        this.hasSliceName = hasSliceName;
+    }
+
+    public Boolean getChoiseOfTypeElement() {
+        return choiseOfTypeElement;
+    }
+
+    public Boolean getHasSliceName() {
+        return hasSliceName;
+    }
+
+    public void setHasSliceName(Boolean hasSliceName) {
+        this.hasSliceName = hasSliceName;
     }
 
     public Boolean isChoiseOfTypeHeader() {
@@ -56,11 +73,11 @@ public class Element {
     }
 
     public String getElementId() {
-        return this.definition.getId();
+        return this.id;
     }
 
     public String getParentName() {
-        String[] parts = this.definition.getId().split("\\.|:");
+        String[] parts = this.id.split("\\.|:");
         if (parts.length < 2) {
             return null;
         }
@@ -68,7 +85,7 @@ public class Element {
     }
 
     public String getParentId() {
-        String input = this.definition.getId();
+        String input = this.id;
 
         int lastDotIndex = input.lastIndexOf('.');
         int lastColonIndex = input.lastIndexOf(':');
@@ -86,7 +103,7 @@ public class Element {
     }
 
     public String getSliceParentId() {
-        String input = this.definition.getId();
+        String input = this.id;
 
         int lastColonIndex = input.lastIndexOf(':');
 
@@ -95,6 +112,18 @@ public class Element {
 
     public Boolean isDataType() {
         return Character.isUpperCase(type.charAt(0));
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setType(String type) {
@@ -130,10 +159,6 @@ public class Element {
         return description;
     }
 
-    public ElementDefinition getDefinition() {
-        return definition;
-    }
-
     // Builder Pattern for easy construction
     public static class Builder {
         private String name;
@@ -141,12 +166,13 @@ public class Element {
         private ElementVisability visability;
         private Cardinality cardinality;
         private String description;
-        private ElementDefinition definition;
         private Boolean hasFixedValue;
         private Integer commentId;
         private Boolean choiseOfTypeHeader;
         private Boolean choiseOfTypeElement;
         private String fixedValue;
+        private String id;
+        private boolean hasSliceName;
 
 
         public Builder() {
@@ -158,6 +184,8 @@ public class Element {
             choiseOfTypeHeader = false;
             choiseOfTypeElement = false;
             fixedValue = "";
+            id = "";
+            hasSliceName = false;
         }
 
         public Builder name(String name) {
@@ -195,11 +223,6 @@ public class Element {
             return this;
         }
 
-        public Builder definition(ElementDefinition definition) {
-            this.definition = definition;
-            return this;
-        }
-
         public Builder hasFixedValue(Boolean hasFixedValue) {
             this.hasFixedValue = hasFixedValue;
             return this;
@@ -215,12 +238,22 @@ public class Element {
             return this;
         }
 
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder hasSliceName(Boolean hasSliceName) {
+            this.hasSliceName = hasSliceName;
+            return this;
+        }
+
         public Element build() {
-            return new Element(name, type, visability, cardinality, description, definition, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue);
+            return new Element(name, type, visability, cardinality, description, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue, id, hasSliceName);
         }
     }
 
-    static String resolveType(ElementDefinition element) {
+    public static String resolveType(ElementDefinition element) {
         if (!element.hasType()) {
             return "N/A";
         }
@@ -296,16 +329,15 @@ public class Element {
     }
 
     public String matchVisability() {
+        if (this.isMain) {
+            return "-";
+        }
+
         if (this.visability == null) {
             return "+";
         }
 
-        return switch (this.visability) {
-            case PRIVATE -> "-";
-            case PROTECTED -> "#";
-            case PACKAGE_PRIVATE -> "~";
-            default -> "+";
-        };
+        return this.visability.toSymbol();
     }
 
     public boolean isRemoved() {
