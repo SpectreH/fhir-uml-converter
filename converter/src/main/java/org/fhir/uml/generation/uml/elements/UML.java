@@ -1,6 +1,4 @@
-package org.fhir.uml.generation.uml;
-
-import org.fhir.uml.generation.uml.elements.*;
+package org.fhir.uml.generation.uml.elements;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -91,7 +89,9 @@ public class UML {
 
         }
 
-        sb.append(this.legend.toString());
+        if (this.legend != null) {
+            sb.append(this.legend.toString());
+        }
 
         sb.append("@enduml");
         return sb.toString();

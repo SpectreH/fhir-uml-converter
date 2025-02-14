@@ -17,7 +17,7 @@ public class Element {
     private final Cardinality cardinality;
     private final String description;
     // private final ElementDefinition definition;
-    private Boolean isMain = false;
+    private Boolean isMain;
     private Boolean isSliceHeader = false;
     private final Boolean hasFixedValue;
     private final String fixedValue;
@@ -28,7 +28,7 @@ public class Element {
     private String path;
     private Boolean hasSliceName;
 
-    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue, String id, Boolean hasSliceName) {
+    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue, String id, Boolean hasSliceName, Boolean isMain) {
         this.name = name;
         this.type = type;
         this.visability = visability;
@@ -42,6 +42,7 @@ public class Element {
         this.id = id;
         this.path = "";
         this.hasSliceName = hasSliceName;
+        this.isMain = isMain;
     }
 
     public Boolean getChoiseOfTypeElement() {
@@ -173,6 +174,7 @@ public class Element {
         private String fixedValue;
         private String id;
         private boolean hasSliceName;
+        private boolean isMain;
 
 
         public Builder() {
@@ -186,6 +188,7 @@ public class Element {
             fixedValue = "";
             id = "";
             hasSliceName = false;
+            isMain = false;
         }
 
         public Builder name(String name) {
@@ -248,8 +251,13 @@ public class Element {
             return this;
         }
 
+        public Builder isMain(Boolean isMain) {
+            this.isMain = isMain;
+            return this;
+        }
+
         public Element build() {
-            return new Element(name, type, visability, cardinality, description, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue, id, hasSliceName);
+            return new Element(name, type, visability, cardinality, description, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue, id, hasSliceName, isMain);
         }
     }
 

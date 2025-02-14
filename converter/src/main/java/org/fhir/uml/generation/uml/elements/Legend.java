@@ -1,102 +1,72 @@
 package org.fhir.uml.generation.uml.elements;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import org.fhir.uml.generation.uml.types.LegendPosition.XPosition;
 import org.fhir.uml.generation.uml.types.LegendPosition.YPosition;
-import org.fhir.uml.generation.uml.types.LegendPosition.CommentType;
 
+/**
+ * A simplified Legend class:
+ * Stores data as "key -> value", then prints them line-by-line
+ * in a PlantUML legend block (no comment ID logic).
+ */
 public class Legend {
 
     private XPosition xPosition;
     private YPosition yPosition;
 
-    private int currentCommentId = 0;
-    private final Map<String, CommentInfo> commentsById = new HashMap<>();
+    // Use LinkedHashMap if you want to preserve insertion order
+    private final Map<String, String> data = new LinkedHashMap<>();
 
-    // 1) Standard version: just add the comment text as is.
-    public int addComment(String externalId, String comment) {
-        return addOrUpdateComment(externalId, comment);
-    }
-
-    // 2) Overloaded version: add comment text with a particular type.
-    //    If type is FIXED_VALUE, automatically prepend "Fixed Value: ".
-    public Integer addComment(String externalId, String comment, CommentType type) {
-        if (comment == null) {
-            return null;
+    /**
+     * Adds or updates a key-value entry to the legend.
+     */
+    public void put(String key, String value) {
+        if (key != null && value != null) {
+            data.put(key, value);
         }
-
-        if (type == CommentType.FIXED_VALUE) {
-            comment = "**Fixed Value:** " + comment;
-        }
-
-        return addOrUpdateComment(externalId, comment);
     }
 
     /**
-     * Helper method that does the actual "add or update" logic.
+     * Returns the value associated with a given key, or null if not present.
      */
-    private int addOrUpdateComment(String externalId, String comment) {
-        CommentInfo info = commentsById.get(externalId);
-        if (info == null) {
-            currentCommentId++;
-            info = new CommentInfo(currentCommentId);
-            commentsById.put(externalId, info);
-        }
-        info.getComments().add(comment);
-        return info.getCommentId();
+    public String get(String key) {
+        return data.get(key);
     }
 
     /**
-     * Returns all comments for a particular externalId.
+     * Returns a read-only view of all current key-value pairs.
      */
-    public List<String> getCommentsForId(String externalId) {
-        CommentInfo info = commentsById.get(externalId);
-        return (info != null) ? info.getComments() : new ArrayList<>();
+    public Map<String, String> getData() {
+        return Map.copyOf(data);
     }
 
-    // Example toString() that produces PlantUML legend syntax
-    // (grouping comments by numeric ID, separated by " | ").
     @Override
     public String toString() {
-        if (commentsById.isEmpty()) {
+        // If there's no data, just return empty string
+        if (data.isEmpty()) {
             return "";
         }
 
+        // Default positions if not set
         XPosition xPos = (xPosition != null) ? xPosition : XPosition.RIGHT;
         YPosition yPos = (yPosition != null) ? yPosition : YPosition.TOP;
 
-        // commentId => list of comment texts
-        Map<Integer, List<String>> commentsByNumber = new TreeMap<>();
-        for (CommentInfo info : commentsById.values()) {
-            commentsByNumber
-                    .computeIfAbsent(info.getCommentId(), k -> new ArrayList<>())
-                    .addAll(info.getComments());
-        }
-
-        if (commentsByNumber.isEmpty()) {
-            return "";
-        }
-
+        // Start building the legend output
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("legend %s %s\n",
+        sb.append(String.format("legend %s %s%n",
                 yPos.name().toLowerCase(), xPos.name().toLowerCase()));
 
-        for (Map.Entry<Integer, List<String>> entry : commentsByNumber.entrySet()) {
-            int commentId = entry.getKey();
-            // Join comments for that ID into one line
-            String joinedComments = String.join(" | ", entry.getValue());
-            sb.append(String.format("(%d) %s\n", commentId, joinedComments));
+        // Print each key: value on its own line
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            sb.append(String.format("%s: %s%n", entry.getKey(), entry.getValue()));
         }
 
         sb.append("end legend\n");
         return sb.toString();
     }
 
-    // getters and setters for xPosition and yPosition
+    // getters/setters for xPosition and yPosition
     public XPosition getXPosition() {
         return xPosition;
     }
@@ -111,23 +81,5 @@ public class Legend {
 
     public void setYPosition(YPosition yPosition) {
         this.yPosition = yPosition;
-    }
-
-    // Inner helper class to store comment ID + all associated texts.
-    private static class CommentInfo {
-        private final int commentId;
-        private final List<String> comments = new ArrayList<>();
-
-        private CommentInfo(int commentId) {
-            this.commentId = commentId;
-        }
-
-        public int getCommentId() {
-            return commentId;
-        }
-
-        public List<String> getComments() {
-            return comments;
-        }
     }
 }

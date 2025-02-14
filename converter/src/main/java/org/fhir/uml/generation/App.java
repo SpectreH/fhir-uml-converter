@@ -4,6 +4,8 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import org.fhir.uml.generation.uml.FHIRGenerator;
 import org.fhir.uml.generation.uml.SnapshotWrapper;
+import org.fhir.uml.generation.uml.elements.UML;
+import org.fhir.uml.generation.uml.Utils;
 import org.hl7.fhir.r4.model.StructureDefinition;
 
 import java.io.*;
@@ -12,7 +14,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class App {
-
     public static void main(String[] args) throws Exception {
         AppArguments appArgs = parseArguments(args);
 
@@ -51,8 +52,10 @@ public class App {
                     jsonContent.toString()
             );
 
-            SnapshotWrapper snapshotWrapper = new SnapshotWrapper(structureDefinition);
-            snapshotWrapper.generateUMLDiagram(appArgs.outputFilePath);
+            UML uml = new UML();
+            SnapshotWrapper snapshotWrapper = new SnapshotWrapper(structureDefinition.getSnapshot(), uml);
+            snapshotWrapper.processSnapshotElements();
+            Utils.generateUMLDiagram(uml, appArgs.outputFilePath);
             System.out.println("Processing complete. UML PNG file written to: " + appArgs.outputFilePath);
 
             if (appArgs.saveTxt) {
@@ -60,11 +63,12 @@ public class App {
                 if (txtOutputFilePath == null) {
                     txtOutputFilePath = appArgs.outputFilePath.replaceAll("\\.png$", ".txt");
                 }
-                snapshotWrapper.saveUMLAsText(txtOutputFilePath);
+                Utils.saveUMLAsText(uml, txtOutputFilePath);
                 System.out.println("PlantUML text also written to: " + txtOutputFilePath);
             }
         } catch (Exception e) {
             System.err.println("Error in UML mode: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -84,7 +88,6 @@ public class App {
 
             FHIRGenerator generator = new FHIRGenerator();
             StructureDefinition structureDefinition = generator.parseUMLFile(umlContent.toString());
-            System.out.println("COMPLETED");
             FhirContext ctx = FhirContext.forR4();
             IParser parser = ctx.newJsonParser().setPrettyPrint(true);
             String structureDefinitionJson = parser.encodeResourceToString(structureDefinition);

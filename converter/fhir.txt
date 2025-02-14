@@ -4,7 +4,6 @@
   "snapshot": {
     "element": [ {
       "id": "Patient",
-      "path": "Patient",
       "min": 0,
       "max": "*",
       "type": [ {

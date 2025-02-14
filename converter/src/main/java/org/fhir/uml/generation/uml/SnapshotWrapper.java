@@ -1,34 +1,33 @@
 package org.fhir.uml.generation.uml;
 
-import net.sourceforge.plantuml.SourceStringReader;
 import net.sourceforge.plantuml.StringUtils;
 import org.fhir.uml.generation.uml.elements.*;
 import org.fhir.uml.generation.uml.types.RelationShipType;
-import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r4.model.ElementDefinition;
 
-import java.io.*;
 import java.util.*;
 
 public class SnapshotWrapper {
+    private final UML uml;
+    private final StructureDefinition.StructureDefinitionSnapshotComponent snapshotComponent;
     private final Map<String, List<Element>> snapshotTableMap = new LinkedHashMap<>();
     private final Map<String, Element> elementMapper = new LinkedHashMap<>();
-    private final UML UML = new UML();
-    private final String resourceName;
-    private final Legend legend = new Legend();
-    private final String baseDefinition;
     private boolean firstElementProcessed = false;
-    private final ElementFactory factory = ElementFactory.init(legend);
+    private final ElementFactory factory = ElementFactory.init();
 
-    public SnapshotWrapper(StructureDefinition structureDefinition) throws Exception {
+    public SnapshotWrapper(StructureDefinition.StructureDefinitionSnapshotComponent snapshotComponent, UML uml) throws Exception {
+        this.uml = uml;
+        this.snapshotComponent = snapshotComponent;
+    }
+
+    public void processSnapshotElements() {
         boolean firstClassPassed = false;
-        this.resourceName = structureDefinition.getName();
-        this.baseDefinition = structureDefinition.getBaseDefinition().substring(
-                structureDefinition.getBaseDefinition().lastIndexOf('/') + 1
-        );
-        structureDefinition.getSnapshot().getElement().forEach(this::processElementToSnapshotTable);
+//        this.resourceName = structureDefinition.getName();
+//        this.baseDefinition = structureDefinition.getBaseDefinition().substring(
+//                structureDefinition.getBaseDefinition().lastIndexOf('/') + 1
+//        );
+        snapshotComponent.getElement().forEach(this::processElementToSnapshotTable);
 
         for (Map.Entry<String, List<Element>> entry : snapshotTableMap.entrySet()) {
             Element umlElement = elementMapper.get(entry.getKey());
@@ -46,12 +45,12 @@ public class SnapshotWrapper {
             }
 
             entry.getValue().forEach(umlClass::addElement);
-            UML.addClass(umlClass);
+            uml.addClass(umlClass);
 
-            UMLClass parentUmlClass = UML.findClassByElement(parentUmlElement);
+            UMLClass parentUmlClass = uml.findClassByElement(parentUmlElement);
 
             if (parentUmlClass != null && !parentUmlClass.equals(umlClass)) {
-                UML.addRelation(Relation.from(
+                uml.addRelation(Relation.from(
                         parentUmlClass,
                         umlClass,
                         RelationShipType.AGGREGATION,
@@ -60,34 +59,7 @@ public class SnapshotWrapper {
                 ));
             }
         }
-
-        UML.setLegend(legend);
     }
-
-    /**
-     * Generates a UML diagram image (PNG) from the internal UML representation.
-     * @param outputFilePath The path where the UML PNG file will be written.
-     * @throws IOException if there's an error writing the output file.
-     */
-    public void generateUMLDiagram(String outputFilePath) throws IOException {
-        SourceStringReader reader = new SourceStringReader(UML.toString());
-        try (OutputStream png = new FileOutputStream(outputFilePath)) {
-            // This generates the UML diagram as a PNG.
-            reader.generateImage(png);
-        }
-    }
-
-    /**
-     * Saves the UML text (PlantUML syntax) to a .txt file.
-     * @param outputFilePath The path where the UML text file will be written.
-     * @throws IOException if there's an error writing the output file.
-     */
-    public void saveUMLAsText(String outputFilePath) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
-            writer.write(UML.toString());
-        }
-    }
-
 
     private void processElementToSnapshotTable(ElementDefinition element) {
         String id = element.getId();
@@ -99,7 +71,7 @@ public class SnapshotWrapper {
 
         if (!firstElementProcessed) {
             firstElementProcessed = true;
-            umlElement.setType(baseDefinition);
+            umlElement.setType(umlElement.getName());
             umlElement.setIsMain(true);
             snapshotTableMap.computeIfAbsent(umlElement.getParentId(), k -> new ArrayList<>()).add(umlElement);
             elementMapper.put(id, umlElement);

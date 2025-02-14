@@ -13,12 +13,10 @@ import java.util.Map;
  * needing to rely on static fields.
  */
 public class ElementFactory {
-    private final Legend legend;
     private final Map<String, String> fixedValues;
 
     // Private constructor; use init(...) to instantiate
-    private ElementFactory(Legend legend, Map<String, String> fixedValues) {
-        this.legend = legend;
+    private ElementFactory(Map<String, String> fixedValues) {
         this.fixedValues = fixedValues;
     }
 
@@ -26,15 +24,15 @@ public class ElementFactory {
      * Initialize the factory with a given Legend. Optionally you can
      * also initialize it with a brand-new or shared Map for fixed values.
      */
-    public static ElementFactory init(Legend legend) {
-        return new ElementFactory(legend, new HashMap<>());
+    public static ElementFactory init() {
+        return new ElementFactory(new HashMap<>());
     }
 
     /**
      * If you need to inject a custom Map of fixed values
      */
-    public static ElementFactory init(Legend legend, Map<String, String> fixedValues) {
-        return new ElementFactory(legend, fixedValues);
+    public static ElementFactory init(Map<String, String> fixedValues) {
+        return new ElementFactory(fixedValues);
     }
 
     /**
@@ -109,10 +107,8 @@ public class ElementFactory {
             }
         }
 
-        commentId = legend.addComment(id, this.fixedValues.get(path), LegendPosition.CommentType.FIXED_VALUE);
-
         ElementVisability visability = ElementVisability.PUBLIC;
-        if (commentId != null) {
+        if (elementDefinition.hasFixed()) {
             visability = ElementVisability.PROTECTED;
         }
 
@@ -130,8 +126,7 @@ public class ElementFactory {
                 .visability(visability)
                 .cardinality(extractedCardinality)
                 .description("")
-                .commentId(commentId)
-                .hasFixedValue(commentId != null)
+                .hasFixedValue(elementDefinition.hasFixed())
                 .fixedValue(fixedValue)
                 .choiseOfTypeHeader(choisesOfTypesHeader)
                 .choiseOfTypeElement(false)

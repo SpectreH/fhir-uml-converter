@@ -188,20 +188,7 @@ public class UMLClass {
         // This map will hold groups -> list of elements
         Map<String, List<Element>> groupMapper = new LinkedHashMap<>();
 
-        if (isMainClass()) {
-            // Example grouping for a main class
-            final String mainGroup = "Profile Parent Element Data";
-            final String childGroup = "Profile Children Elements";
-
-            // Partition the elements based on whether they are "main" or not
-            Map<Boolean, List<Element>> partitionedMap = elements.stream()
-                    .collect(Collectors.partitioningBy(Element::isMain));
-
-            // Build groupMapper entries:
-            groupMapper.put(mainGroup, partitionedMap.getOrDefault(true, Collections.emptyList()));
-            groupMapper.put(childGroup, partitionedMap.getOrDefault(false, Collections.emptyList()));
-
-        } else if (isSliceHeader()) {
+        if (isSliceHeader()) {
             final String mainGroup = "Content/Rules for all slices";
             final String slicesGroup = "Slices";
             Map<Boolean, List<Element>> partitionedMap = elements.stream()
@@ -238,7 +225,7 @@ public class UMLClass {
 
             // Print each element that’s not removed or is choice-of-type
             groupElements.stream()
-                    .filter(e -> e.isChoiseOfTypeElement() || !e.isRemoved())
+                    .filter(e -> e.isChoiseOfTypeElement() || !e.isRemoved() && !e.isMain())
                     .forEach(e -> sb.append("\t").append(e).append("\n"));
         }
 
