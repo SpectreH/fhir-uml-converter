@@ -2,9 +2,11 @@ package org.fhir.uml.generation.uml.elements;
 
 import org.fhir.uml.generation.uml.types.ElementVisability;
 import org.fhir.uml.generation.uml.types.LegendPosition;
+import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.r4.model.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,6 +52,7 @@ public class ElementFactory {
         String[] parts = id.split("\\.|:");
         String extractedName = (parts.length == 0) ? null : parts[parts.length - 1];
         String fixedValue = "";
+        boolean hasFixedValue = false;
 
         String min = String.valueOf(elementDefinition.getMin());
         String max = elementDefinition.getMax();
@@ -62,62 +65,18 @@ public class ElementFactory {
         }
 
         if (elementDefinition.hasFixed()) {
-            Type fixedType = elementDefinition.getFixed();
-            if (fixedType instanceof StringType fixedString) {
-                this.fixedValues.put(path, fixedString.getValue());
-            } else if (fixedType.getClass() == UriType.class) {
-                UriType fixedUriType = (UriType) fixedType;
-                this.fixedValues.put(path, fixedUriType.getValue());
-            } else if (fixedType.getClass() == CodeableConcept.class) {
-                CodeableConcept fixedConcept = (CodeableConcept) fixedType;
-
-                Coding coding = fixedConcept.getCoding().getFirst();
-                if (coding.getCode() != null) {
-                    this.fixedValues.put(path + ".code", coding.getCode());
-                }
-                if (coding.getDisplay() != null) {
-                    this.fixedValues.put(path + ".display", coding.getDisplay());
-                }
-                if (coding.getSystem() != null) {
-                    this.fixedValues.put(path + ".system", coding.getSystem());
-                }
-                if (coding.getVersion() != null) {
-                    this.fixedValues.put(path + ".version", coding.getVersion());
-                }
-                if (coding.getUserSelectedElement() != null) {
-                    this.fixedValues.put(path + ".userSelected", coding.getUserSelectedElement().toString());
-                }
-            } else if (fixedType.getClass() == Coding.class) {
-                Coding coding = (Coding) fixedType;
-                if (coding.getCode() != null) {
-                    this.fixedValues.put(path + ".code", coding.getCode());
-                }
-                if (coding.getDisplay() != null) {
-                    this.fixedValues.put(path + ".display", coding.getDisplay());
-                }
-                if (coding.getSystem() != null) {
-                    this.fixedValues.put(path + ".system", coding.getSystem());
-                }
-                if (coding.getVersion() != null) {
-                    this.fixedValues.put(path + ".version", coding.getVersion());
-                }
-                if (!coding.getUserSelectedElement().isEmpty()) {
-                    this.fixedValues.put(path + ".userSelected", coding.getUserSelectedElement().getValue().toString());
-                }
-            }
+            parseFixedValues(elementDefinition.getFixed(), path);
         }
 
         ElementVisability visability = ElementVisability.PUBLIC;
-        if (elementDefinition.hasFixed()) {
-            visability = ElementVisability.PROTECTED;
-        }
-
         if (extractedType.contains("Reference") || extractedType.contains("canonical")) {
             visability = ElementVisability.PACKAGE_PRIVATE;
         }
 
         if (this.fixedValues.containsKey(path)) {
             fixedValue = fixedValues.get(path);
+            hasFixedValue = true;
+            visability = ElementVisability.PROTECTED;
         }
 
         return new Element.Builder()
@@ -126,13 +85,41 @@ public class ElementFactory {
                 .visability(visability)
                 .cardinality(extractedCardinality)
                 .description("")
-                .hasFixedValue(elementDefinition.hasFixed())
+                .hasFixedValue(hasFixedValue)
                 .fixedValue(fixedValue)
                 .choiseOfTypeHeader(choisesOfTypesHeader)
                 .choiseOfTypeElement(false)
                 .id(elementDefinition.getId())
                 .hasSliceName(elementDefinition.getSliceName() != null && !elementDefinition.getSliceName().isEmpty())
                 .build();
+    }
+
+    private void parseFixedValues(Type fixedType, String path) {
+        if (fixedType instanceof PrimitiveType) {
+            String value = ((PrimitiveType<?>) fixedType).getValueAsString();
+            fixedValues.put(path, value);
+            System.out.println(path + ": " + value);
+            return;
+        }
+
+        List<Property> children = fixedType.children();
+        for (Property childProp : children) {
+            String childName = childProp.getName();
+            List<Base> values = childProp.getValues();
+
+            for (int i = 0; i < values.size(); i++) {
+                IBase childValue = values.get(i);
+
+                String indexedPath = path + "." + childName;
+                if (values.size() > 1) {
+                    indexedPath += "[" + i + "]";
+                }
+
+                if (childValue instanceof Type) {
+                    parseFixedValues((Type) childValue, indexedPath);
+                }
+            }
+        }
     }
 
     // Getter if you need to read or manipulate the map externally
