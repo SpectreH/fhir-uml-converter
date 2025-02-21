@@ -1,43 +1,64 @@
 package org.fhir.uml.generation.uml.elements;
 
-import org.fhir.uml.generation.uml.types.ElementVisability;
-import org.fhir.uml.generation.uml.types.LegendPosition;
-import org.hl7.fhir.r4.model.*;
-import org.hl7.fhir.r4.utils.SnomedExpressions;
+import org.fhir.uml.generation.uml.types.ElementVisability; // If you control this class name, consider renaming to ElementVisibility
+import org.hl7.fhir.r4.model.ElementDefinition;
+import org.hl7.fhir.r4.model.Extension;
+import org.hl7.fhir.r4.model.UrlType;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a UML Element with FHIR-specific properties (e.g., cardinalities, slice headers, etc.).
+ */
 public class Element {
+
+    // ---------------------------------------------------------------------------------------------
+    // Fields
+    // ---------------------------------------------------------------------------------------------
     private final String name;
     private String type;
-    private final ElementVisability visability;
+    private final ElementVisability visibility;
     private final Cardinality cardinality;
     private final String description;
-    // private final ElementDefinition definition;
+
     private Boolean isMain;
     private Boolean isSliceHeader = false;
     private final Boolean hasFixedValue;
     private final String fixedValue;
     private final Integer commentId;
-    private final Boolean choiseOfTypeHeader;
-    private final Boolean choiseOfTypeElement;
+    private final Boolean choiceOfTypeHeader;
+    private final Boolean choiceOfTypeElement;
     private String id;
     private String path;
     private Boolean hasSliceName;
 
-    private Element(String name, String type, ElementVisability visability, Cardinality cardinality, String description, Boolean hasFixedValue, Integer commentId, Boolean choiseOfTypeHeader, Boolean choiseOfTypeElement, String fixedValue, String id, Boolean hasSliceName, Boolean isMain) {
+    // ---------------------------------------------------------------------------------------------
+    // Private Constructor
+    // ---------------------------------------------------------------------------------------------
+    private Element(String name,
+                    String type,
+                    ElementVisability visibility,
+                    Cardinality cardinality,
+                    String description,
+                    Boolean hasFixedValue,
+                    Integer commentId,
+                    Boolean choiceOfTypeHeader,
+                    Boolean choiceOfTypeElement,
+                    String fixedValue,
+                    String id,
+                    Boolean hasSliceName,
+                    Boolean isMain) {
+
         this.name = name;
         this.type = type;
-        this.visability = visability;
+        this.visibility = visibility;
         this.cardinality = cardinality;
         this.description = description;
         this.hasFixedValue = hasFixedValue;
         this.commentId = commentId;
-        this.choiseOfTypeHeader = choiseOfTypeHeader;
-        this.choiseOfTypeElement = choiseOfTypeElement;
+        this.choiceOfTypeHeader = choiceOfTypeHeader;
+        this.choiceOfTypeElement = choiceOfTypeElement;
         this.fixedValue = fixedValue;
         this.id = id;
         this.path = "";
@@ -45,164 +66,134 @@ public class Element {
         this.isMain = isMain;
     }
 
-    public Boolean getChoiseOfTypeElement() {
-        return choiseOfTypeElement;
-    }
+    // ---------------------------------------------------------------------------------------------
+    // Static Utility Methods
+    // ---------------------------------------------------------------------------------------------
 
-    public Boolean getHasSliceName() {
-        return hasSliceName;
-    }
-
-    public void setHasSliceName(Boolean hasSliceName) {
-        this.hasSliceName = hasSliceName;
-    }
-
-    public Boolean isChoiseOfTypeHeader() {
-        return choiseOfTypeHeader;
-    }
-
-    public Boolean isChoiseOfTypeElement() {
-        return choiseOfTypeElement;
-    }
-
-    public Boolean isSliceHeader() {
-        return this.isSliceHeader;
-    }
-
-    public void setSliceHeader(Boolean sliceHeader) {
-        this.isSliceHeader = sliceHeader;
-    }
-
-    public String getElementId() {
-        return this.id;
-    }
-
-    public String getParentName() {
-        String[] parts = this.id.split("\\.|:");
-        if (parts.length < 2) {
-            return null;
+    /**
+     * Resolves the type(s) of an ElementDefinition into a comma-separated string.
+     * If no types exist, returns "N/A".
+     */
+    public static String resolveType(ElementDefinition element) {
+        if (!element.hasType()) {
+            return "N/A";
         }
-        return parts[parts.length - 2];
+        return element.getType().stream()
+                .map(Element::resolveTypeComponent)
+                .collect(Collectors.joining(", "));
     }
 
-    public String getParentId() {
-        String input = this.id;
-
-        int lastDotIndex = input.lastIndexOf('.');
-        int lastColonIndex = input.lastIndexOf(':');
-
-        // Determine the separator to use for splitting
-        int splitIndex = Math.max(lastDotIndex, lastColonIndex);
-
-        // If no valid separator is found, return the input as-is
-        if (splitIndex == -1) {
-            return input;
+    /**
+     * Helper method to resolve a single TypeRefComponent into a string representation.
+     */
+    private static String resolveTypeComponent(ElementDefinition.TypeRefComponent type) {
+        if (type == null) {
+            return "Unknown";
         }
 
-        // Return the substring excluding the last segment
-        return input.substring(0, splitIndex);
+        // Check for extension-based type override
+        if (!type.getExtension().isEmpty()) {
+            String extensionType = handleExtensionType(type.getExtension());
+            if (extensionType != null) {
+                return extensionType;
+            }
+        }
+
+        String baseType = type.getCode();
+
+        if ("Reference".equals(baseType)) {
+            return handleReferenceType(type);
+        }
+        if ("canonical".equals(baseType)) {
+            return handleCanonicalType(type);
+        }
+
+        return baseType != null ? baseType : "N/A";
     }
 
-    public String getSliceParentId() {
-        String input = this.id;
-
-        int lastColonIndex = input.lastIndexOf(':');
-
-        return input.substring(0, lastColonIndex);
+    /**
+     * Extracts a type override from the first extension if it exists.
+     */
+    private static String handleExtensionType(List<Extension> extensions) {
+        Extension firstExtension = extensions.get(0);
+        if (firstExtension != null && firstExtension.getValue() instanceof UrlType) {
+            return ((UrlType) firstExtension.getValue()).getValue();
+        }
+        return null;
     }
 
-    public Boolean isDataType() {
-        return Character.isUpperCase(type.charAt(0));
+    /**
+     * Formats a Reference type string, including its possible target profiles.
+     */
+    private static String handleReferenceType(ElementDefinition.TypeRefComponent type) {
+        if (type.hasTargetProfile()) {
+            String targetProfiles = type.getTargetProfile().stream()
+                    .map(profile -> extractProfileName(profile.getValue()))
+                    .collect(Collectors.joining(" | "));
+            return String.format("Reference(%s)", targetProfiles);
+        }
+        return "Reference";
     }
 
-    public String getPath() {
-        return path;
+    /**
+     * Formats a canonical type string, including its possible target profiles.
+     */
+    private static String handleCanonicalType(ElementDefinition.TypeRefComponent type) {
+        if (type.hasTargetProfile()) {
+            String targetProfiles = type.getTargetProfile().stream()
+                    .map(profile -> extractProfileName(profile.getValue()))
+                    .collect(Collectors.joining(" | "));
+            return String.format("canonical(%s)", targetProfiles);
+        }
+        return "canonical";
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    /**
+     * Extracts the trailing portion of a URL (after the last slash) as the profile name.
+     */
+    private static String extractProfileName(String profileValue) {
+        if (profileValue == null) {
+            return "UnknownProfile";
+        }
+        return profileValue.substring(profileValue.lastIndexOf('/') + 1);
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    // ---------------------------------------------------------------------------------------------
+    // Builder
+    // ---------------------------------------------------------------------------------------------
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setIsMain(Boolean isMain) {
-        this.isMain = isMain;
-    }
-
-    public Boolean isMain() {
-        return isMain;
-    }
-
-    // Public getters so we can retrieve this info later
-    public String getName() {
-        return name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public ElementVisability getVisability() {
-        return visability;
-    }
-
-    public Cardinality getCardinality() {
-        return cardinality;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    // Builder Pattern for easy construction
     public static class Builder {
         private String name;
         private String type;
-        private ElementVisability visability;
+        private ElementVisability visibility;
         private Cardinality cardinality;
         private String description;
         private Boolean hasFixedValue;
         private Integer commentId;
-        private Boolean choiseOfTypeHeader;
-        private Boolean choiseOfTypeElement;
+        private Boolean choiceOfTypeHeader;
+        private Boolean choiceOfTypeElement;
         private String fixedValue;
         private String id;
         private boolean hasSliceName;
         private boolean isMain;
 
-
         public Builder() {
-            name = "";
-            type = "";
-            description = "";
-            hasFixedValue = false;
-            commentId = null;
-            choiseOfTypeHeader = false;
-            choiseOfTypeElement = false;
-            fixedValue = "";
-            id = "";
-            hasSliceName = false;
-            isMain = false;
+            // Default initialization
+            this.name = "";
+            this.type = "";
+            this.description = "";
+            this.hasFixedValue = false;
+            this.commentId = null;
+            this.choiceOfTypeHeader = false;
+            this.choiceOfTypeElement = false;
+            this.fixedValue = "";
+            this.id = "";
+            this.hasSliceName = false;
+            this.isMain = false;
         }
 
         public Builder name(String name) {
             this.name = name;
-            return this;
-        }
-
-        public Builder choiseOfTypeHeader(Boolean choiseOfTypeHeader) {
-            this.choiseOfTypeHeader = choiseOfTypeHeader;
-            return this;
-        }
-
-        public Builder choiseOfTypeElement(Boolean choiseOfTypeElement) {
-            this.choiseOfTypeElement = choiseOfTypeElement;
             return this;
         }
 
@@ -211,8 +202,8 @@ public class Element {
             return this;
         }
 
-        public Builder visability(ElementVisability visability) {
-            this.visability = visability;
+        public Builder visibility(ElementVisability visibility) {
+            this.visibility = visibility;
             return this;
         }
 
@@ -233,6 +224,16 @@ public class Element {
 
         public Builder commentId(Integer commentId) {
             this.commentId = commentId;
+            return this;
+        }
+
+        public Builder choiceOfTypeHeader(Boolean choiceOfTypeHeader) {
+            this.choiceOfTypeHeader = choiceOfTypeHeader;
+            return this;
+        }
+
+        public Builder choiceOfTypeElement(Boolean choiceOfTypeElement) {
+            this.choiceOfTypeElement = choiceOfTypeElement;
             return this;
         }
 
@@ -257,100 +258,177 @@ public class Element {
         }
 
         public Element build() {
-            return new Element(name, type, visability, cardinality, description, hasFixedValue, commentId, choiseOfTypeHeader, choiseOfTypeElement, fixedValue, id, hasSliceName, isMain);
+            return new Element(
+                    this.name,
+                    this.type,
+                    this.visibility,
+                    this.cardinality,
+                    this.description,
+                    this.hasFixedValue,
+                    this.commentId,
+                    this.choiceOfTypeHeader,
+                    this.choiceOfTypeElement,
+                    this.fixedValue,
+                    this.id,
+                    this.hasSliceName,
+                    this.isMain
+            );
         }
     }
 
-    public static String resolveType(ElementDefinition element) {
-        if (!element.hasType()) {
-            return "N/A";
-        }
-
-        return element.getType().stream()
-                .map(Element::resolveTypeComponent)
-                .collect(Collectors.joining(", "));
+    // ---------------------------------------------------------------------------------------------
+    // Getters and Setters
+    // ---------------------------------------------------------------------------------------------
+    public String getName() {
+        return name;
     }
 
-    private static String resolveTypeComponent(ElementDefinition.TypeRefComponent type) {
-        if (type == null) {
-            return "Unknown";
-        }
-
-        if (!type.getExtension().isEmpty()) {
-            String extensionType = handleExtensionType(type.getExtension());
-            if (extensionType != null) {
-                return extensionType;
-            }
-        }
-
-        String baseType = type.getCode();
-
-        if ("Reference".equals(baseType)) {
-            return handleReferenceType(type);
-        }
-
-        if ("canonical".equals(baseType)) {
-            return handleCanonicalType(type);
-        }
-
-        return baseType != null ? baseType : "N/A";
+    public String getType() {
+        return type;
     }
 
+    public ElementVisability getVisibility() {
+        return visibility;
+    }
 
-    private static String handleExtensionType(List<Extension> extensions) {
-        Extension firstExtension = extensions.get(0); // Assuming the first extension
-        if (firstExtension != null && firstExtension.getValue() instanceof UrlType) {
-            return ((UrlType) firstExtension.getValue()).getValue();
+    public Cardinality getCardinality() {
+        return cardinality;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Boolean getChoiceOfTypeElement() {
+        return choiceOfTypeElement;
+    }
+
+    public Boolean isChoiceOfTypeHeader() {
+        return choiceOfTypeHeader;
+    }
+
+    public Boolean isChoiceOfTypeElement() {
+        return choiceOfTypeElement;
+    }
+
+    public Boolean getHasSliceName() {
+        return hasSliceName;
+    }
+
+    public void setHasSliceName(Boolean hasSliceName) {
+        this.hasSliceName = hasSliceName;
+    }
+
+    public Boolean isSliceHeader() {
+        return isSliceHeader;
+    }
+
+    public void setSliceHeader(Boolean sliceHeader) {
+        this.isSliceHeader = sliceHeader;
+    }
+
+    public String getElementId() {
+        return this.id;
+    }
+
+    public Boolean isMain() {
+        return isMain;
+    }
+
+    public void setIsMain(Boolean isMain) {
+        this.isMain = isMain;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Additional Utilities
+    // ---------------------------------------------------------------------------------------------
+
+    /**
+     * Returns the element's parent name by splitting the ID on '.' or ':'.
+     * Example: "Patient.identifier" → parent name is "Patient".
+     */
+    public String getParentName() {
+        String[] parts = this.id.split("\\.|:");
+        if (parts.length < 2) {
+            return null;
         }
-        return null;
+        return parts[parts.length - 2];
     }
 
-    private static String handleReferenceType(ElementDefinition.TypeRefComponent type) {
-        if (type.hasTargetProfile()) {
-            String targetProfiles = type.getTargetProfile().stream()
-                    .map(profile -> extractProfileName(profile.getValue()))
-                    .collect(Collectors.joining(" | "));
-            return String.format("Reference(%s)", targetProfiles);
+    /**
+     * Returns the parent ID by trimming everything after the last '.' or ':'.
+     * Example: "Patient.identifier.system" → "Patient.identifier"
+     */
+    public String getParentId() {
+        int lastDotIndex = id.lastIndexOf('.');
+        int lastColonIndex = id.lastIndexOf(':');
+        int splitIndex = Math.max(lastDotIndex, lastColonIndex);
+
+        if (splitIndex == -1) {
+            return id;
         }
-        return "Reference";
+        return id.substring(0, splitIndex);
     }
 
-    private static String handleCanonicalType(ElementDefinition.TypeRefComponent type) {
-        if (type.hasTargetProfile()) {
-            String targetProfiles = type.getTargetProfile().stream()
-                    .map(profile -> extractProfileName(profile.getValue()))
-                    .collect(Collectors.joining(" | "));
-            return String.format("canonical(%s)", targetProfiles);
+    /**
+     * Returns the slice's parent ID by trimming everything after the last ':'.
+     */
+    public String getSliceParentId() {
+        int lastColonIndex = id.lastIndexOf(':');
+        if (lastColonIndex == -1) {
+            return id;
         }
-        return "canonical";
+        return id.substring(0, lastColonIndex);
     }
 
-    private static String extractProfileName(String profileValue) {
-        if (profileValue == null) {
-            return "UnknownProfile";
-        }
-        return profileValue.substring(profileValue.lastIndexOf('/') + 1);
+    /**
+     * Determines if this element is a data type (i.e., if the type starts with an uppercase letter).
+     */
+    public Boolean isDataType() {
+        return type != null
+                && !type.isEmpty()
+                && Character.isUpperCase(type.charAt(0));
     }
 
-    private String resolveSliceName(ElementDefinition element) {
-        return element.getSliceName(); // Fallback to the slice name in the definition
-    }
-
-    public String matchVisability() {
-        if (this.isMain) {
+    /**
+     * Matches visibility to its UML representation symbol (e.g., "+" for public).
+     */
+    public String matchVisibilitySymbol() {
+        if (Boolean.TRUE.equals(this.isMain)) {
             return "-";
         }
-
-        if (this.visability == null) {
+        if (this.visibility == null) {
             return "+";
         }
-
-        return this.visability.toSymbol();
+        return this.visibility.toSymbol();
     }
 
+    /**
+     * Determines if the cardinality indicates the element is removed.
+     */
     public boolean isRemoved() {
-        return cardinality.isRemoved();
+        return cardinality != null && cardinality.isRemoved();
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Overrides
+    // ---------------------------------------------------------------------------------------------
 
     @Override
     public String toString() {
@@ -359,16 +437,23 @@ public class Element {
             cardinalitySb.append(cardinality.toString());
         }
 
-        StringBuilder commentReference = new StringBuilder();
-//        if (commentId != null) {
-//            commentReference.append("**(").append(commentId).append(")**");
-//        }
-
         StringBuilder fixedValueSb = new StringBuilder();
-        if (hasFixedValue) {
-            fixedValueSb.append("= ").append("**").append(fixedValue).append("**");
+        if (Boolean.TRUE.equals(hasFixedValue)) {
+            fixedValueSb.append("= **").append(fixedValue).append("**");
         }
 
-        return String.format("{field} %s %s : %s %s %s %s %s", matchVisability(), name, type, fixedValueSb.toString(), cardinalitySb.toString(), description, commentReference.toString());
+        /*
+          Example Format:
+          {field} + name : type = **fixedValue** [cardinality] description
+        */
+        return String.format(
+                "{field} %s %s : %s %s %s %s",
+                matchVisibilitySymbol(),
+                name,
+                type,
+                fixedValueSb,
+                cardinalitySb,
+                description
+        );
     }
 }

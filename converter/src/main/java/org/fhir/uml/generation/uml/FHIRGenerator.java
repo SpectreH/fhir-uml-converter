@@ -154,13 +154,13 @@ public class FHIRGenerator {
                     elementBuilder.cardinality(new Cardinality(fieldCardinality));
                 } else {
                     // If no cardinality, it might be a choice element
-                    elementBuilder.choiseOfTypeElement(true);
+                    elementBuilder.choiceOfTypeElement(true);
                 }
 
                 elementBuilder
                         .type(fieldType != null ? fieldType.strip() : null)
                         .name(fieldName)
-                        .visability(ElementVisability.fromSymbol(fieldVisibility))
+                        .visibility(ElementVisability.fromSymbol(fieldVisibility))
                         .hasSliceName(nextElementsAreSlices);
 
                 Element element = elementBuilder.build();

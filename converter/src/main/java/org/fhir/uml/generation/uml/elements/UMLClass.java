@@ -70,7 +70,7 @@ public class UMLClass {
     }
 
     public Boolean isChoiseOfTypeHeader() {
-        return this.mainElement.isChoiseOfTypeHeader();
+        return this.mainElement.isChoiceOfTypeHeader();
     }
 
     public String getTitle() {
@@ -201,7 +201,7 @@ public class UMLClass {
             final String choisesGroup = "Types";
 
             Map<Boolean, List<Element>> partitionedMap = elements.stream()
-                    .collect(Collectors.partitioningBy(Element::getChoiseOfTypeElement));
+                    .collect(Collectors.partitioningBy(Element::getChoiceOfTypeElement));
 
             groupMapper.put(mainGroup, partitionedMap.getOrDefault(false, Collections.emptyList()));
             groupMapper.put(choisesGroup, partitionedMap.getOrDefault(true, Collections.emptyList()));
@@ -225,7 +225,7 @@ public class UMLClass {
 
             // Print each element that’s not removed or is choice-of-type
             groupElements.stream()
-                    .filter(e -> e.isChoiseOfTypeElement() || !e.isRemoved() && !e.isMain())
+                    .filter(e -> e.isChoiceOfTypeElement() || !e.isRemoved() && !e.isMain())
                     .forEach(e -> sb.append("\t").append(e).append("\n"));
         }
 

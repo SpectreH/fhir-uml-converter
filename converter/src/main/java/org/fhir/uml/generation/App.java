@@ -3,7 +3,8 @@ package org.fhir.uml.generation;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import org.fhir.uml.generation.uml.FHIRGenerator;
-import org.fhir.uml.generation.uml.SnapshotWrapper;
+import org.fhir.uml.generation.uml.StructureDefinitionWrapper;
+import org.fhir.uml.generation.uml.elements.Legend;
 import org.fhir.uml.generation.uml.elements.UML;
 import org.fhir.uml.generation.uml.Utils;
 import org.hl7.fhir.r4.model.StructureDefinition;
@@ -53,8 +54,22 @@ public class App {
             );
 
             UML uml = new UML();
-            SnapshotWrapper snapshotWrapper = new SnapshotWrapper(structureDefinition.getSnapshot(), uml);
-            snapshotWrapper.processSnapshotElements();
+            StructureDefinitionWrapper snapshotWrapper = new StructureDefinitionWrapper(uml);
+//            snapshotWrapper.proccessDifferential(structureDefinition.getDifferential());
+            snapshotWrapper.proccessSnapshot(structureDefinition.getSnapshot());
+
+            Legend legend = new Legend();
+            legend.put("url", structureDefinition.getUrl());
+            legend.put("version", structureDefinition.getVersion());
+            legend.put("name", structureDefinition.getName());
+            legend.put("status", structureDefinition.getStatus().getDisplay());
+            legend.put("kind", structureDefinition.getKind().getDisplay());
+            legend.put("type", structureDefinition.getType());
+            legend.put("abstract", String.format("%s", structureDefinition.getAbstract()));
+            legend.put("baseDefinition", structureDefinition.getBaseDefinition());
+
+            uml.setLegend(legend);
+
             Utils.generateUMLDiagram(uml, appArgs.outputFilePath);
             System.out.println("Processing complete. UML PNG file written to: " + appArgs.outputFilePath);
 

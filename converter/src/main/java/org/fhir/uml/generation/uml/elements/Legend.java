@@ -59,7 +59,7 @@ public class Legend {
 
         // Print each key: value on its own line
         for (Map.Entry<String, String> entry : data.entrySet()) {
-            sb.append(String.format("%s: %s%n", entry.getKey(), entry.getValue()));
+            sb.append(String.format("**%s**: %s%n", entry.getKey(), entry.getValue()));
         }
 
         sb.append("end legend\n");
