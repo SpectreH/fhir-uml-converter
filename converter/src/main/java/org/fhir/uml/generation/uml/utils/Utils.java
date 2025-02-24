@@ -1,4 +1,4 @@
-package org.fhir.uml.generation.uml;
+package org.fhir.uml.generation.uml.utils;
 
 import net.sourceforge.plantuml.SourceStringReader;
 import org.fhir.uml.generation.uml.elements.UML;

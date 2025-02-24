@@ -96,7 +96,7 @@ public class FHIRGenerator {
                 parsedFhirClassName = umlClassName;
             }
 
-            UMLClass umlClass = new UMLClass(parsedFhirClassType, parsedFhirClassName, null, null);
+            UMLClass umlClass = new UMLClass(parsedFhirClassType, parsedFhirClassName, null, null, false);
             umlClass.setTitle(umlClassName);
 
             if (customClassType != null) {

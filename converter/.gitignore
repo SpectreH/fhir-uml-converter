@@ -45,3 +45,4 @@ hotel/.idea/
 /.idea/sonarlint/*
 ../.idea/sonarlint/*
 ../.idea/
+/plantuml.jar

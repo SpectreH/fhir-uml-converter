@@ -1,5 +1,7 @@
 package org.fhir.uml.generation.uml.elements;
 
+import org.fhir.uml.generation.uml.utils.Config;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -8,6 +10,7 @@ public class UML {
     private final LinkedList<Relation> relations;
     private UMLClass mainClass;
     private Legend legend;
+    private final Config config = Config.getInstance();
 
     public UML() {
         this.classes = new LinkedList<>();
@@ -76,21 +79,42 @@ public class UML {
         sb.append("skinparam wrapwidth 500\n");
         sb.append("left to right direction\n");
 
+        sb.append("skinparam classStereotypeFontColor black\n");
+
+        if (config.isDifferential()) {
+            sb.append("skinparam classAttributeFontColor #808080\n");
+        }
+
+        sb.append("!function bold($value)\n");
+        sb.append("!return \"<b>\" + $value + \"</b>\"\n");
+        sb.append("!endfunction\n");
+
+        sb.append("!function black($value)\n");
+        sb.append("!return \"<color:Black>\" + $value + \"</color>\"\n");
+        sb.append("!endfunction\n");
+
+        sb.append("!function strikethrough($value)\n");
+        sb.append("!return \"<s>\" + $value + \"</s>\"\n");
+        sb.append("!endfunction\n");
+
         sb.append("\n");
 
         for (UMLClass umlClass : this.classes) {
-            sb.append(umlClass.toString());
+            if (config.isHideRemovedObjects() && umlClass.isParentElementIsRemoved()) {
+                continue;
+            }
+            sb.append(umlClass);
         }
 
         for (Relation relation : this.relations) {
-            if (!relation.getCardinality().isRemoved()) {
-                sb.append(relation.toString());
+            if (config.isHideRemovedObjects() & relation.getCardinality().isRemoved()) {
+                continue;
             }
-
+            sb.append(relation);
         }
 
         if (this.legend != null) {
-            sb.append(this.legend.toString());
+            sb.append(this.legend);
         }
 
         sb.append("@enduml");

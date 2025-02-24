@@ -1,6 +1,7 @@
 package org.fhir.uml.generation.uml.elements;
 
 import org.fhir.uml.generation.uml.types.CustomClassType;
+import org.fhir.uml.generation.uml.utils.Config;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,8 +15,10 @@ public class UMLClass {
     private Element mainElement;
     private Element parentElement;
     private CustomClassType customClassType;
+    private boolean parentElementIsRemoved;
+    private Config config = Config.getInstance();
 
-    public UMLClass(String type, String name, Element mainElement, Element parentElement) {
+    public UMLClass(String type, String name, Element mainElement, Element parentElement, boolean parentElementIsRemoved) {
         this.title = String.format("%s (%s)", type, name);
         this.type = type;
         this.name = name;
@@ -23,6 +26,11 @@ public class UMLClass {
         this.mainElement = mainElement;
         this.parentElement = parentElement;
         this.mainClass = false;
+        this.parentElementIsRemoved = parentElementIsRemoved;
+    }
+
+    public boolean isParentElementIsRemoved() {
+        return parentElementIsRemoved;
     }
 
     public boolean isMainClass() {
@@ -149,15 +157,17 @@ public class UMLClass {
     }
 
     public String matchTitle() {
+        String title = this.title;
+
         if (this.isSliceHeader()) {
-            return String.format("Slices for %s (%s)", this.name, this.parentElement.getName());
+            title = String.format("Slices for %s (%s)", this.name, this.parentElement.getName());
         }
 
         if (this.isChoiseOfTypeHeader()) {
-            return String.format("%s", this.name);
+            title = String.format("%s", this.name);
         }
 
-        return title;
+        return wrapDifferential(title);
     }
 
     @Override
@@ -171,6 +181,14 @@ public class UMLClass {
     @Override
     public int hashCode() {
         return title != null ? title.hashCode() : 0;
+    }
+
+    private String wrapDifferential(String value) {
+        if (config.getView().equals("differential")) {
+            return "black('" + value + "')";
+        }
+
+        return value;
     }
 
     @Override
@@ -225,7 +243,8 @@ public class UMLClass {
 
             // Print each element that’s not removed or is choice-of-type
             groupElements.stream()
-                    .filter(e -> e.isChoiceOfTypeElement() || !e.isRemoved() && !e.isMain())
+                    .filter(e -> (e.isChoiceOfTypeElement() || !e.isMain()))
+                    .filter(e -> !config.isHideRemovedObjects() || !e.isRemoved())
                     .forEach(e -> sb.append("\t").append(e).append("\n"));
         }
 

@@ -32,12 +32,14 @@ public class ElementFactory {
         String id = elementDefinition.getId();
 
         // Extract name from element ID.
-        String[] pathParts = id.split("\\.|:");
-        String extractedName = (pathParts.length == 0) ? null : pathParts[pathParts.length - 1];
+        String[] idParts = id.split("\\.|:");
+        String extractedName = (idParts.length == 0) ? null : idParts[idParts.length - 1];
+//        System.out.println(id);
+
 
         // Cardinality
         Cardinality extractedCardinality = new Cardinality(
-                String.valueOf(elementDefinition.getMin()),
+                String.valueOf(elementDefinition.getMinElement().getValue()),
                 elementDefinition.getMax()
         );
 
@@ -54,11 +56,10 @@ public class ElementFactory {
         // Fixed values handling
         boolean hasFixedValue = false;
         String fixedValue = "";
-        if (fixedValues.containsKey(path)) {
-            fixedValue = fixedValues.get(path);
-            fixedValues.remove(path);
+        if (fixedValues.containsKey(id)) {
+            fixedValue = fixedValues.get(id);
+            fixedValues.remove(id);
             hasFixedValue = true;
-            extractedCardinality = new Cardinality("1", "1");
             visibility = ElementVisability.PROTECTED;
         }
 
@@ -80,7 +81,7 @@ public class ElementFactory {
     public void defineFixedValues(List<ElementDefinition> copyList, List<ElementDefinition> structureElements) {
         for (ElementDefinition ed : copyList) {
             if (ed.hasFixed()) {
-                parseFixedValues(ed.getFixed(), ed.getPath(), structureElements);
+                parseFixedValues(ed.getFixed(), ed.getId(), ed.getPath(), structureElements);
             }
         }
     }
@@ -90,14 +91,14 @@ public class ElementFactory {
      * а также создаёт и добавляет новые ElementDefinition в snapshotComponent
      * для каждого уровня вложенности.
      */
-    private void parseFixedValues(Type fixedType, String path, List<ElementDefinition> structureElements) {
+    private void parseFixedValues(Type fixedType, String id, String path, List<ElementDefinition> structureElements) {
         if (fixedType instanceof PrimitiveType) {
-            handlePrimitiveFixedType((PrimitiveType<?>) fixedType, path, structureElements);
+            handlePrimitiveFixedType((PrimitiveType<?>) fixedType, id, path, structureElements);
             return;
         }
 
         // Handle complex fixed type
-        addElementDefinitionForFixedType(fixedType, path, structureElements);
+        addElementDefinitionForFixedType(fixedType, id, path, structureElements);
 
         // Recursively parse children
         List<Property> children = fixedType.children();
@@ -108,6 +109,7 @@ public class ElementFactory {
             for (int i = 0; i < values.size(); i++) {
                 IBase childValue = values.get(i);
 
+                String nextId = id + "." + childName;
                 String nextPath = path + "." + childName;
                 // If there are multiple values, add an index
                 if (values.size() > 1) {
@@ -115,7 +117,7 @@ public class ElementFactory {
                 }
 
                 if (childValue instanceof Type) {
-                    parseFixedValues((Type) childValue, nextPath, structureElements);
+                    parseFixedValues((Type) childValue,nextId, nextPath, structureElements);
                 }
                 // If childValue is a Resource or something else,
                 // handle accordingly (not typical for fixed, but possible).
@@ -164,12 +166,12 @@ public class ElementFactory {
     /**
      * Handles the case when the fixed type is a primitive.
      */
-    private void handlePrimitiveFixedType(PrimitiveType<?> primitive, String path, List<ElementDefinition> structureElements) {
+    private void handlePrimitiveFixedType(PrimitiveType<?> primitive, String id, String path, List<ElementDefinition> structureElements) {
         String value = primitive.getValueAsString();
-        fixedValues.put(path, value);
+        fixedValues.put(id, value);
 
         // Create a new ElementDefinition for the primitive
-        ElementDefinition edPrim = newElementDefinition(path, primitive);
+        ElementDefinition edPrim = newElementDefinition(id, path, primitive);
         edPrim.setMin(1);
         edPrim.setMax("1");
         edPrim.setFixed(primitive);
@@ -183,13 +185,13 @@ public class ElementFactory {
      * Creates an ElementDefinition for a complex fixed type
      * (non-primitive case).
      */
-    private void addElementDefinitionForFixedType(Type fixedType, String path, List<ElementDefinition> structureElements) {
-        ElementDefinition edParent = newElementDefinition(path, fixedType);
+    private void addElementDefinitionForFixedType(Type fixedType, String id, String path, List<ElementDefinition> structureElements) {
+        ElementDefinition edParent = newElementDefinition(id, path, fixedType);
         edParent.setMin(1);
         edParent.setMax("1");
         edParent.setFixed(fixedType);
 
-        if (getElementByPath(structureElements, path) == null) {
+        if (getElementById(structureElements, id) == null) {
             structureElements.add(edParent);
         }
     }
@@ -198,9 +200,9 @@ public class ElementFactory {
      * Utility method for creating a fresh ElementDefinition
      * with basic properties set.
      */
-    private ElementDefinition newElementDefinition(String path, Type type) {
+    private ElementDefinition newElementDefinition(String id, String path, Type type) {
         ElementDefinition ed = new ElementDefinition();
-        ed.setId(path);
+        ed.setId(id);
         ed.setPath(path);
 
         ElementDefinition.TypeRefComponent typeRef = new ElementDefinition.TypeRefComponent();
@@ -224,6 +226,25 @@ public class ElementFactory {
 
                 ed = (ElementDefinition)var2.next();
             } while(!path.equals(ed.getPath()) && !(path + "[x]").equals(ed.getPath()));
+
+            return ed;
+        }
+    }
+
+    public ElementDefinition getElementById(List<ElementDefinition> structureElements, String id) {
+        if (id == null) {
+            return null;
+        } else {
+            Iterator var2 = structureElements.iterator();
+
+            ElementDefinition ed;
+            do {
+                if (!var2.hasNext()) {
+                    return null;
+                }
+
+                ed = (ElementDefinition)var2.next();
+            } while(!id.equals(ed.getId()) && !(id + "[x]").equals(ed.getId()));
 
             return ed;
         }

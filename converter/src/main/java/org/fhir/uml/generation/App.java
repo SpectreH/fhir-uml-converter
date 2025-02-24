@@ -4,9 +4,11 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import org.fhir.uml.generation.uml.FHIRGenerator;
 import org.fhir.uml.generation.uml.StructureDefinitionWrapper;
+import org.fhir.uml.generation.uml.elements.Element;
 import org.fhir.uml.generation.uml.elements.Legend;
 import org.fhir.uml.generation.uml.elements.UML;
-import org.fhir.uml.generation.uml.Utils;
+import org.fhir.uml.generation.uml.utils.Config;
+import org.fhir.uml.generation.uml.utils.Utils;
 import org.hl7.fhir.r4.model.StructureDefinition;
 
 import java.io.*;
@@ -14,34 +16,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class App {
-    public static void main(String[] args) throws Exception {
-        AppArguments appArgs = parseArguments(args);
 
-        if (appArgs.showHelp || appArgs.inputFilePath == null || appArgs.outputFilePath == null) {
+public class App {
+    private static Config config;
+    public static void main(String[] args) throws Exception {
+        config = Config.fromArgs(args);
+
+        if (config.isShowHelp() || config.getInputFilePath() == null || config.getOutputFilePath() == null) {
             printUsage();
             return;
         }
 
-        Map<String, Consumer<AppArguments>> modeHandlers = new HashMap<>();
+        Map<String, Runnable> modeHandlers = new HashMap<>();
         modeHandlers.put("uml", App::runUmlMode);
         modeHandlers.put("fhir", App::runFhirMode);
 
-        Consumer<AppArguments> handler = modeHandlers.getOrDefault(
-                appArgs.mode.toLowerCase(),
-                App::runUmlMode
-        );
-
-        handler.accept(appArgs);
+        Runnable handler = modeHandlers.getOrDefault(config.getMode().toLowerCase(), App::runUmlMode);
+        handler.run();
     }
 
-    private static void runUmlMode(AppArguments appArgs) {
+    private static void runUmlMode() {
         try {
             FhirContext ctx = FhirContext.forR4();
             IParser parser = ctx.newJsonParser();
 
             StringBuilder jsonContent = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new FileReader(appArgs.inputFilePath))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(config.getInputFilePath()))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     jsonContent.append(line);
@@ -54,9 +54,21 @@ public class App {
             );
 
             UML uml = new UML();
-            StructureDefinitionWrapper snapshotWrapper = new StructureDefinitionWrapper(uml);
-//            snapshotWrapper.proccessDifferential(structureDefinition.getDifferential());
-            snapshotWrapper.proccessSnapshot(structureDefinition.getSnapshot());
+            StructureDefinitionWrapper snapshotWrapper = new StructureDefinitionWrapper(structureDefinition, uml);
+            snapshotWrapper.processSnapshot();
+            snapshotWrapper.processDifferential();
+
+            if (config.isDifferential()) {
+                snapshotWrapper.mapDifferentialElementsWithSnapshotElements();
+                snapshotWrapper.generateDifferentialUMLClasses();
+            } else {
+                snapshotWrapper.generateSnapshotUMLClasses();
+            }
+
+            uml.getMainClass().setName(Element.getURLLastPath(structureDefinition.getBaseDefinition()));
+            uml.getMainClass().updateTitle();
+
+            snapshotWrapper.generateUMLRelations();
 
             Legend legend = new Legend();
             legend.put("url", structureDefinition.getUrl());
@@ -70,13 +82,13 @@ public class App {
 
             uml.setLegend(legend);
 
-            Utils.generateUMLDiagram(uml, appArgs.outputFilePath);
-            System.out.println("Processing complete. UML PNG file written to: " + appArgs.outputFilePath);
+            Utils.generateUMLDiagram(uml, config.getOutputFilePath());
+            System.out.println("Processing complete. UML PNG file written to: " + config.getOutputFilePath());
 
-            if (appArgs.saveTxt) {
-                String txtOutputFilePath = appArgs.txtOutputFilePath;
+            if (config.isSaveTxt()) {
+                String txtOutputFilePath = config.getTxtOutputFilePath();
                 if (txtOutputFilePath == null) {
-                    txtOutputFilePath = appArgs.outputFilePath.replaceAll("\\.png$", ".txt");
+                    txtOutputFilePath = config.getTxtOutputFilePath().replaceAll("\\.png$", ".txt");
                 }
                 Utils.saveUMLAsText(uml, txtOutputFilePath);
                 System.out.println("PlantUML text also written to: " + txtOutputFilePath);
@@ -87,14 +99,14 @@ public class App {
         }
     }
 
-    private static void runFhirMode(AppArguments appArgs) {
+    private static void runFhirMode() {
         try {
-            if (appArgs.saveTxt) {
+            if (config.isSaveTxt()) {
                 System.out.println("Warning: --txt is not used in 'fhir' mode. Ignoring.");
             }
 
             StringBuilder umlContent = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new FileReader(appArgs.inputFilePath))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(config.getInputFilePath()))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     umlContent.append(line).append("\n");
@@ -107,50 +119,15 @@ public class App {
             IParser parser = ctx.newJsonParser().setPrettyPrint(true);
             String structureDefinitionJson = parser.encodeResourceToString(structureDefinition);
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(appArgs.outputFilePath))) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(config.getOutputFilePath()))) {
                 writer.write(structureDefinitionJson);
             }
-            System.out.println("Transformation complete. FHIR StructureDefinition written to: " + appArgs.outputFilePath);
+            System.out.println("Transformation complete. FHIR StructureDefinition written to: " + config.getOutputFilePath());
 
         } catch (Exception e) {
             System.err.println("Error in FHIR mode: " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    private static AppArguments parseArguments(String[] args) {
-        AppArguments appArgs = new AppArguments();
-
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
-            switch (arg.toLowerCase()) {
-                case "--help":
-                    appArgs.showHelp = true;
-                    break;
-                case "--mode":
-                    if (i + 1 < args.length) {
-                        appArgs.mode = args[++i];
-                    }
-                    break;
-                case "--input":
-                    if (i + 1 < args.length) {
-                        appArgs.inputFilePath = args[++i];
-                    }
-                    break;
-                case "--output":
-                    if (i + 1 < args.length) {
-                        appArgs.outputFilePath = args[++i];
-                    }
-                    break;
-                case "--txt":
-                    appArgs.saveTxt = true;
-                    if ((i + 1) < args.length && !args[i + 1].startsWith("--")) {
-                        appArgs.txtOutputFilePath = args[++i];
-                    }
-                    break;
-            }
-        }
-        return appArgs;
     }
 
     private static StructureDefinition createStructureDefinitionFromUml(String umlText) {
@@ -176,14 +153,5 @@ public class App {
         System.out.println();
         System.out.println("Options:");
         System.out.println("  --help   Show this help message");
-    }
-
-    private static class AppArguments {
-        String mode = "uml";            // Default mode
-        String inputFilePath;
-        String outputFilePath;
-        boolean saveTxt = false;
-        String txtOutputFilePath;
-        boolean showHelp = false;
     }
 }

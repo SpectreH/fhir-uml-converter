@@ -1,11 +1,16 @@
 package org.fhir.uml.generation.uml.elements;
 
+import org.fhir.uml.generation.uml.types.ElementModifiers;
 import org.fhir.uml.generation.uml.types.ElementVisability; // If you control this class name, consider renaming to ElementVisibility
+import org.fhir.uml.generation.uml.utils.Config;
+import org.hl7.fhir.r4.model.CanonicalType;
 import org.hl7.fhir.r4.model.ElementDefinition;
 import org.hl7.fhir.r4.model.Extension;
 import org.hl7.fhir.r4.model.UrlType;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -16,22 +21,22 @@ public class Element {
     // ---------------------------------------------------------------------------------------------
     // Fields
     // ---------------------------------------------------------------------------------------------
-    private final String name;
+    private String name;
     private String type;
-    private final ElementVisability visibility;
-    private final Cardinality cardinality;
-    private final String description;
-
+    private ElementVisability visibility;
+    private Cardinality cardinality;
+    private String description;
     private Boolean isMain;
     private Boolean isSliceHeader = false;
-    private final Boolean hasFixedValue;
-    private final String fixedValue;
-    private final Integer commentId;
-    private final Boolean choiceOfTypeHeader;
-    private final Boolean choiceOfTypeElement;
+    private Boolean hasFixedValue;
+    private String fixedValue;
+    private Integer commentId;
+    private Boolean choiceOfTypeHeader;
+    private Boolean choiceOfTypeElement;
     private String id;
     private String path;
     private Boolean hasSliceName;
+    private final List<ElementModifiers> differentialModifiers = new ArrayList<>();
 
     // ---------------------------------------------------------------------------------------------
     // Private Constructor
@@ -101,6 +106,13 @@ public class Element {
 
         String baseType = type.getCode();
 
+
+        if (!type.getProfile().isEmpty() && "Extension".equals(baseType)) {
+            CanonicalType profile = type.getProfile().getFirst();
+            String lastSegment = getURLLastPath(profile.getValue());
+            return "Extension" + (lastSegment.isEmpty() ? "" : "(" + lastSegment + ")");
+        }
+
         if ("Reference".equals(baseType)) {
             return handleReferenceType(type);
         }
@@ -111,11 +123,15 @@ public class Element {
         return baseType != null ? baseType : "N/A";
     }
 
+    public static String getURLLastPath(String value) {
+        return value.substring(Math.max(0, value.lastIndexOf('/') + 1));
+    }
+
     /**
      * Extracts a type override from the first extension if it exists.
      */
     private static String handleExtensionType(List<Extension> extensions) {
-        Extension firstExtension = extensions.get(0);
+        Extension firstExtension = extensions.getFirst();
         if (firstExtension != null && firstExtension.getValue() instanceof UrlType) {
             return ((UrlType) firstExtension.getValue()).getValue();
         }
@@ -190,6 +206,7 @@ public class Element {
             this.id = "";
             this.hasSliceName = false;
             this.isMain = false;
+            this.cardinality = new Cardinality("", "");
         }
 
         public Builder name(String name) {
@@ -426,34 +443,190 @@ public class Element {
         return cardinality != null && cardinality.isRemoved();
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // Overrides
-    // ---------------------------------------------------------------------------------------------
+    public void copyValuesFrom(Element source) {
+        copyValuesFrom(source, false);
+    }
+
+    public List<String> copyValuesFrom(Element source, boolean logDifferences) {
+        List<String> changes = new ArrayList<>();
+
+        if (source == null) {
+            return changes; // Empty list, no changes.
+        }
+
+        // -- Example: name --
+        if (!Objects.equals(this.name, source.name)) {
+            changes.add("name: " + this.name + " -> " + source.name);
+            this.name = source.name;
+        }
+
+        // -- type --
+        if (!Objects.equals(this.type, source.type)) {
+            changes.add("type: " + this.type + " -> " + source.type);
+            this.type = source.type;
+        } else {
+            differentialModifiers.add(ElementModifiers.TYPE);
+        }
+
+        // -- visibility --
+        if (!Objects.equals(this.visibility, source.visibility)) {
+            changes.add("visibility: " + this.visibility + " -> " + source.visibility);
+            this.visibility = source.visibility;
+        }
+
+        // -- cardinality MAX --
+        if (!Objects.equals(this.cardinality.getMax(), source.cardinality.getMax())) {
+            changes.add("MAX cardinality: " + this.cardinality.getMax() + " -> " + source.cardinality.getMax());
+            this.cardinality.setMax(source.cardinality.getMax());
+        } else {
+            differentialModifiers.add(ElementModifiers.CARDINALITY_MAX);
+        }
+
+        // -- cardinality MIN -
+        if (!Objects.equals(this.cardinality.getMin(), source.cardinality.getMin())) {
+            changes.add("MIN cardinality: " + this.cardinality.getMin() + " -> " + source.cardinality.getMin());
+            this.cardinality.setMin(source.cardinality.getMin());
+        } else {
+            differentialModifiers.add(ElementModifiers.CARDINALITY_MIN);
+        }
+
+        // -- description --
+        if (!Objects.equals(this.description, source.description)) {
+            changes.add("description: " + this.description + " -> " + source.description);
+            this.description = source.description;
+        }
+
+        // -- isMain --
+        if (!Objects.equals(this.isMain, source.isMain)) {
+            changes.add("isMain: " + this.isMain + " -> " + source.isMain);
+            this.isMain = source.isMain;
+        }
+
+        // -- isSliceHeader --
+        if (!Objects.equals(this.isSliceHeader, source.isSliceHeader)) {
+            changes.add("isSliceHeader: " + this.isSliceHeader + " -> " + source.isSliceHeader);
+            this.isSliceHeader = source.isSliceHeader;
+        }
+
+        // -- hasFixedValue --
+        if (!Objects.equals(this.hasFixedValue, source.hasFixedValue)) {
+            changes.add("hasFixedValue: " + this.hasFixedValue + " -> " + source.hasFixedValue);
+            this.hasFixedValue = source.hasFixedValue;
+        }
+
+        // -- fixedValue --
+        if (!Objects.equals(this.fixedValue, source.fixedValue)) {
+            changes.add("fixedValue: " + this.fixedValue + " -> " + source.fixedValue);
+            this.fixedValue = source.fixedValue;
+        } else {
+            differentialModifiers.add(ElementModifiers.FIXED_VALUE);
+        }
+
+        // -- commentId --
+        if (!Objects.equals(this.commentId, source.commentId)) {
+            changes.add("commentId: " + this.commentId + " -> " + source.commentId);
+            this.commentId = source.commentId;
+        }
+
+        // -- choiceOfTypeHeader --
+        if (!Objects.equals(this.choiceOfTypeHeader, source.choiceOfTypeHeader)) {
+            changes.add("choiceOfTypeHeader: " + this.choiceOfTypeHeader + " -> " + source.choiceOfTypeHeader);
+            this.choiceOfTypeHeader = source.choiceOfTypeHeader;
+        }
+
+        // -- choiceOfTypeElement --
+        if (!Objects.equals(this.choiceOfTypeElement, source.choiceOfTypeElement)) {
+            changes.add("choiceOfTypeElement: " + this.choiceOfTypeElement + " -> " + source.choiceOfTypeElement);
+            this.choiceOfTypeElement = source.choiceOfTypeElement;
+        }
+
+        // -- id --
+        if (!Objects.equals(this.id, source.id)) {
+            changes.add("id: " + this.id + " -> " + source.id);
+            this.id = source.id;
+        }
+
+        // -- path --
+        if (!Objects.equals(this.path, source.path)) {
+            changes.add("path: " + this.path + " -> " + source.path);
+            this.path = source.path;
+        }
+
+        // -- hasSliceName --
+        if (!Objects.equals(this.hasSliceName, source.hasSliceName)) {
+            changes.add("hasSliceName: " + this.hasSliceName + " -> " + source.hasSliceName);
+            this.hasSliceName = source.hasSliceName;
+        }
+
+        // Optionally log differences
+        if (logDifferences && !changes.isEmpty()) {
+            System.out.println("Changes applied to " + getElementId() + ": ");
+            for (String change : changes) {
+                System.out.println("  " + change);
+            }
+        }
+
+        return changes;
+    }
+
+    private String wrapVariable(String value, ElementModifiers modifier) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value.isBlank()) {
+            return value;
+        }
+
+        if (isRemoved() && modifier == ElementModifiers.STRICKEN_THROUGH) {
+            return "strikethrough('" + value + "')";
+        }
+
+        if (modifier == ElementModifiers.NAME && differentialModifiers.size() > 1) {
+            return "black('" + value + "')";
+        }
+
+        if (differentialModifiers.contains(modifier)) {
+            return "black(bold('" + value + "'))";
+        }
+        return value;
+    }
+
+    private String matchCardinality() {
+        String min = wrapVariable(cardinality.getMin(), ElementModifiers.CARDINALITY_MIN);
+        String max = wrapVariable(cardinality.getMax(), ElementModifiers.CARDINALITY_MAX);
+
+        if (min.isBlank() && max.isBlank()) {
+            return "";
+        }
+
+        return String.format("[%s..%s]",min,max);
+    }
 
     @Override
     public String toString() {
-        StringBuilder cardinalitySb = new StringBuilder();
-        if (cardinality != null) {
-            cardinalitySb.append(cardinality.toString());
+        if (isRemoved() && !Config.getInstance().isHideRemovedObjects()) {
+            return String.format("{field} %s %s", matchVisibilitySymbol(), wrapVariable(String.format("%s : %s %s %s", name, type, fixedValue, cardinality), ElementModifiers.STRICKEN_THROUGH));
         }
 
-        StringBuilder fixedValueSb = new StringBuilder();
-        if (Boolean.TRUE.equals(hasFixedValue)) {
-            fixedValueSb.append("= **").append(fixedValue).append("**");
-        }
+        // Сначала получаем уже "wrap'нутое" значение fixedValue
+        String fixedValueStr = wrapVariable(fixedValue, ElementModifiers.FIXED_VALUE);
 
-        /*
-          Example Format:
-          {field} + name : type = **fixedValue** [cardinality] description
-        */
+        // Проверяем, нужно ли добавлять "="
+        // (учитываем, что wrapVariable() возвращает null или ту же строку, если она пустая)
+        String fixedValuePart = (fixedValueStr == null || fixedValueStr.isBlank())
+                ? ""                 // если пустая/нет значения — ничего не добавляем
+                : "= " + fixedValueStr; // иначе добавляем "="
+
+
         return String.format(
                 "{field} %s %s : %s %s %s %s",
                 matchVisibilitySymbol(),
-                name,
-                type,
-                fixedValueSb,
-                cardinalitySb,
-                description
+                wrapVariable(name, ElementModifiers.NAME),
+                wrapVariable(type, ElementModifiers.TYPE),
+                fixedValuePart,
+                matchCardinality(),
+                wrapVariable(description, ElementModifiers.DESCRIPTION)
         );
     }
 }

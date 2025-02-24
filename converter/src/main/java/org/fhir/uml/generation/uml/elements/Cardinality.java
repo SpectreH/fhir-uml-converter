@@ -21,6 +21,14 @@ public class Cardinality {
         }
     }
 
+    public void setMin(String min) {
+        this.min = min;
+    }
+
+    public void setMax(String max) {
+        this.max = max;
+    }
+
     public String getMin() {
         return min;
     }
@@ -31,10 +39,18 @@ public class Cardinality {
 
     @Override
     public String toString() {
+        if (min.isEmpty() && max.isEmpty()) {
+            return "";
+        }
+
         return String.format("[%s..%s]", min, max);
     }
 
     public String relationString() {
+        if (min.isEmpty() && max.isEmpty()) {
+            return "";
+        }
+
         return String.format("%s..%s", min, max);
     }
 
