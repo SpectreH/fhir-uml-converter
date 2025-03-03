@@ -45,16 +45,11 @@ public class ConverterController {
 
         String finalContentDisposition = parsedCd.toHeaderValue();
 
-        byte[] responseBytes = converterService.convertFhirToUml(body, viewMode, responseMediaType);
+        byte[] responseBytes = converterService.convertFhirToUml(body, viewMode, "uml", responseMediaType);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, responseMediaType)
                 .header(HttpHeaders.CONTENT_DISPOSITION, finalContentDisposition)
                 .body(responseBytes);
-    }
-
-    @PostMapping("/uml2fhir")
-    public String convertUml2Fhir(@RequestBody String uml) {
-        return converterService.convertUmlToFhir(uml);
     }
 }

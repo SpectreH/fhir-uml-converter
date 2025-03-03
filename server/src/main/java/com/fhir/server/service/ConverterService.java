@@ -17,7 +17,7 @@ public class ConverterService {
     @Value("${converter.name.jar}")
     private String converterJarName;
 
-    public byte[] convertFhirToUml(String body, ViewMode viewMode, String requestedContentType) throws IOException, InterruptedException {
+    public byte[] convertFhirToUml(String body, ViewMode viewMode, String toGenerate, String requestedContentType) throws IOException, InterruptedException {
         Path inputFile = Files.createTempFile("input", ".json");
         Path outputPngFile = Files.createTempFile("output", ".png");
         Path outputTxtFile = Files.createTempFile("output", ".txt");
@@ -27,12 +27,16 @@ public class ConverterService {
                 "java",
                 "-jar",
                 converterJarName,
+                "--mode",
+                toGenerate,
                 "--input",
                 inputFile.toAbsolutePath().toString(),
                 "--output",
                 outputPngFile.toAbsolutePath().toString(),
                 "--txt",
-                outputTxtFile.toAbsolutePath().toString()
+                outputTxtFile.toAbsolutePath().toString(),
+                "--view",
+                viewMode.getViewValue()
         );
 
         Process process = pb.start();
