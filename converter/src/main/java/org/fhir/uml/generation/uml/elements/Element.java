@@ -37,6 +37,7 @@ public class Element {
     private String path;
     private Boolean hasSliceName;
     private final List<ElementModifiers> differentialModifiers = new ArrayList<>();
+    private Binding binding;
 
     // ---------------------------------------------------------------------------------------------
     // Private Constructor
@@ -53,7 +54,8 @@ public class Element {
                     String fixedValue,
                     String id,
                     Boolean hasSliceName,
-                    Boolean isMain) {
+                    Boolean isMain,
+                    Binding binding) {
 
         this.name = name;
         this.type = type;
@@ -69,6 +71,7 @@ public class Element {
         this.path = "";
         this.hasSliceName = hasSliceName;
         this.isMain = isMain;
+        this.binding = binding;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -192,6 +195,7 @@ public class Element {
         private String id;
         private boolean hasSliceName;
         private boolean isMain;
+        private Binding binding;
 
         public Builder() {
             // Default initialization
@@ -207,6 +211,7 @@ public class Element {
             this.hasSliceName = false;
             this.isMain = false;
             this.cardinality = new Cardinality("", "");
+            this.binding = null;
         }
 
         public Builder name(String name) {
@@ -274,6 +279,11 @@ public class Element {
             return this;
         }
 
+        public Builder binding(Binding binding) {
+            this.binding = binding;
+            return this;
+        }
+
         public Element build() {
             return new Element(
                     this.name,
@@ -288,7 +298,8 @@ public class Element {
                     this.fixedValue,
                     this.id,
                     this.hasSliceName,
-                    this.isMain
+                    this.isMain,
+                    this.binding
             );
         }
     }
@@ -370,6 +381,10 @@ public class Element {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Binding getBinding() {
+        return binding;
     }
 
     // ---------------------------------------------------------------------------------------------

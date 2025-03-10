@@ -245,7 +245,12 @@ public class UMLClass {
             groupElements.stream()
                     .filter(e -> (e.isChoiceOfTypeElement() || !e.isMain()))
                     .filter(e -> !config.isHideRemovedObjects() || !e.isRemoved())
-                    .forEach(e -> sb.append("\t").append(e).append("\n"));
+                    .forEach(e -> {
+                        sb.append("\t").append(e).append("\n");
+                        if (e.getBinding() != null) {
+                            sb.append("\t").append(e.getBinding()).append("\n");
+                        }
+                    });
         }
 
         sb.append("}\n");

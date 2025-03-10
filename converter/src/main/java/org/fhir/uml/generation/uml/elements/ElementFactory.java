@@ -28,6 +28,7 @@ public class ElementFactory {
      * при необходимости вызывая parseFixedValues для заполнения Map и snapshot.
      */
     public Element fromElementDefinition(ElementDefinition elementDefinition) {
+        Element.Builder elementBuilder = new Element.Builder();
         String path = elementDefinition.getPath();
         String id = elementDefinition.getId();
 
@@ -63,8 +64,16 @@ public class ElementFactory {
             visibility = ElementVisability.PROTECTED;
         }
 
+        Binding binding;
+        if (!elementDefinition.getBinding().isEmpty()) {
+            String strength = elementDefinition.getBinding().getStrength().getDisplay();
+            String valueSet = elementDefinition.getBinding().getValueSet();
+            elementBuilder.binding(new Binding(valueSet, strength));
+        }
+
+
         // Build and return the Element
-        return new Element.Builder()
+        return elementBuilder
                 .name(extractedName)
                 .type(extractedType)
                 .visibility(visibility)
