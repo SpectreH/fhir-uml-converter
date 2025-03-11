@@ -96,8 +96,7 @@ public class FHIRGenerator {
                 parsedFhirClassName = umlClassName;
             }
 
-            UMLClass umlClass = new UMLClass(parsedFhirClassType, parsedFhirClassName, null, null, false);
-            umlClass.setTitle(umlClassName);
+            UMLClass umlClass = new UMLClass(parsedFhirClassType, parsedFhirClassName, null, null, false);;
 
             if (customClassType != null) {
                 umlClass.setCustomClassType(CustomClassType.fromUmlString(customClassType));
@@ -224,9 +223,6 @@ public class FHIRGenerator {
     // Step 3: Post-process the UML model
     // -------------------------------------------------------------------------
     private void postProcessUML(UML uml) {
-        // Update each UMLClass title (this might do special formatting)
-        uml.getClasses().forEach(UMLClass::updateTitle);
-
         // The "main class" is typically the first one that was flagged
         UMLClass mainClass = uml.getMainClass();
         if (mainClass == null) {

@@ -6,6 +6,7 @@ import org.fhir.uml.generation.uml.types.RelationShipType;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r4.model.StructureDefinition.*;
 import org.hl7.fhir.r4.model.ElementDefinition;
+import org.hl7.fhir.r4.model.codesystems.Relationship;
 
 import java.util.*;
 
@@ -30,7 +31,7 @@ public class StructureDefinitionWrapper {
     public StructureDefinitionWrapper(StructureDefinition structureDefinition, UML uml) throws Exception {
         this.structureDefinition = structureDefinition;
         this.uml = uml;
-        this.factory = new ElementFactory(fixedValues);
+        this.factory = new ElementFactory(fixedValues, uml.getConstraints());
     }
 
     public void processSnapshot() {
@@ -141,10 +142,15 @@ public class StructureDefinitionWrapper {
         for (UMLClass umlClass : uml.getClasses()) {
             UMLClass parentUmlClass = uml.findClassByElement(umlClass.getParentElement());
             if (parentUmlClass != null && !parentUmlClass.equals(umlClass)) {
+                RelationShipType relationship = RelationShipType.AGGREGATION;
+                if (parentUmlClass.getMainElement().isMain()) {
+                    relationship = RelationShipType.COMPOSITION;
+                }
+
                 uml.addRelation(Relation.from(
                         parentUmlClass,
                         umlClass,
-                        RelationShipType.AGGREGATION,
+                        relationship,
                         umlClass.getMainElement().getName(),
                         umlClass.getMainElement().getCardinality()
                 ));

@@ -7,6 +7,7 @@ import org.fhir.uml.generation.uml.StructureDefinitionWrapper;
 import org.fhir.uml.generation.uml.elements.Element;
 import org.fhir.uml.generation.uml.elements.Legend;
 import org.fhir.uml.generation.uml.elements.UML;
+import org.fhir.uml.generation.uml.types.LegendPosition;
 import org.fhir.uml.generation.uml.utils.Config;
 import org.fhir.uml.generation.uml.utils.Utils;
 import org.hl7.fhir.r4.model.StructureDefinition;
@@ -66,19 +67,30 @@ public class App {
             }
 
             uml.getMainClass().setName(Element.getURLLastPath(structureDefinition.getBaseDefinition()));
-            uml.getMainClass().updateTitle();
 
             snapshotWrapper.generateUMLRelations();
 
             Legend legend = new Legend();
-            legend.put("url", structureDefinition.getUrl());
-            legend.put("version", structureDefinition.getVersion());
-            legend.put("name", structureDefinition.getName());
-            legend.put("status", structureDefinition.getStatus().getDisplay());
-            legend.put("kind", structureDefinition.getKind().getDisplay());
-            legend.put("type", structureDefinition.getType());
-            legend.put("abstract", String.format("%s", structureDefinition.getAbstract()));
-            legend.put("baseDefinition", structureDefinition.getBaseDefinition());
+            legend.setXPosition(LegendPosition.XPosition.RIGHT);
+            legend.setYPosition(LegendPosition.YPosition.TOP);
+
+            legend.addGroup("StructureDefinition")
+                    .setHeader("Type", "Value")
+                    .addRow("url", "https://fhir.ee/base/StructureDefinition/ee-patient")
+                    .addRow("version", "1.1.1")
+                    .addRow("name", "EEBasePatient")
+                    .addRow("status", "Draft")
+                    .addRow("kind", "Resource")
+                    .addRow("type", "Patient")
+                    .addRow("abstract", "false")
+                    .addRow("baseDefinition", "http://hl7.org/fhir/StructureDefinition/Patient");
+
+            Legend.LegendGroup constraintGroup = legend.addGroup("Constraints");
+            constraintGroup.setHeader("Key", "Severity", "Human");
+
+            uml.getConstraints().values().forEach(constraint -> {
+                constraintGroup.addRow(constraint.getKey(), constraint.getSeverity(), String.format("wrap2(\"%s\", 50)", constraint.getHuman()));
+            });
 
             uml.setLegend(legend);
 

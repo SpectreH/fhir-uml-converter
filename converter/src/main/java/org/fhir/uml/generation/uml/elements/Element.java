@@ -38,6 +38,7 @@ public class Element {
     private Boolean hasSliceName;
     private final List<ElementModifiers> differentialModifiers = new ArrayList<>();
     private Binding binding;
+    private final List<Constraint> constraints;
 
     // ---------------------------------------------------------------------------------------------
     // Private Constructor
@@ -55,7 +56,8 @@ public class Element {
                     String id,
                     Boolean hasSliceName,
                     Boolean isMain,
-                    Binding binding) {
+                    Binding binding,
+                    List<Constraint> constraints) {
 
         this.name = name;
         this.type = type;
@@ -72,6 +74,7 @@ public class Element {
         this.hasSliceName = hasSliceName;
         this.isMain = isMain;
         this.binding = binding;
+        this.constraints = constraints;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -196,6 +199,7 @@ public class Element {
         private boolean hasSliceName;
         private boolean isMain;
         private Binding binding;
+        private final List<Constraint> constraints;
 
         public Builder() {
             // Default initialization
@@ -212,6 +216,7 @@ public class Element {
             this.isMain = false;
             this.cardinality = new Cardinality("", "");
             this.binding = null;
+            this.constraints = new ArrayList<>();
         }
 
         public Builder name(String name) {
@@ -284,6 +289,11 @@ public class Element {
             return this;
         }
 
+        public Builder addConstraint(Constraint constraint) {
+            this.constraints.add(constraint);
+            return this;
+        }
+
         public Element build() {
             return new Element(
                     this.name,
@@ -299,7 +309,8 @@ public class Element {
                     this.id,
                     this.hasSliceName,
                     this.isMain,
-                    this.binding
+                    this.binding,
+                    this.constraints
             );
         }
     }
@@ -385,6 +396,10 @@ public class Element {
 
     public Binding getBinding() {
         return binding;
+    }
+
+    public List<Constraint> getConstraints() {
+        return constraints;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -487,6 +502,10 @@ public class Element {
         if (!Objects.equals(this.visibility, source.visibility)) {
             changes.add("visibility: " + this.visibility + " -> " + source.visibility);
             this.visibility = source.visibility;
+        }
+
+        if (!Objects.equals(this.binding, source.binding) && this.binding != null) {
+            differentialModifiers.add(ElementModifiers.BINDING);
         }
 
         // -- cardinality MAX --
@@ -624,17 +643,15 @@ public class Element {
             return String.format("{field} %s %s", matchVisibilitySymbol(), wrapVariable(String.format("%s : %s %s %s", name, type, fixedValue, cardinality), ElementModifiers.STRICKEN_THROUGH));
         }
 
-        // Сначала получаем уже "wrap'нутое" значение fixedValue
         String fixedValueStr = wrapVariable(fixedValue, ElementModifiers.FIXED_VALUE);
 
-        // Проверяем, нужно ли добавлять "="
-        // (учитываем, что wrapVariable() возвращает null или ту же строку, если она пустая)
         String fixedValuePart = (fixedValueStr == null || fixedValueStr.isBlank())
-                ? ""                 // если пустая/нет значения — ничего не добавляем
-                : "= " + fixedValueStr; // иначе добавляем "="
+                ? ""
+                : "= " + fixedValueStr;
 
+        StringBuilder sb = new StringBuilder();
 
-        return String.format(
+        sb.append(String.format(
                 "{field} %s %s : %s %s %s %s",
                 matchVisibilitySymbol(),
                 wrapVariable(name, ElementModifiers.NAME),
@@ -642,6 +659,19 @@ public class Element {
                 fixedValuePart,
                 matchCardinality(),
                 wrapVariable(description, ElementModifiers.DESCRIPTION)
-        );
+        ));
+
+        if (binding != null && Config.getInstance().isShowBindnigs()) {
+            sb.append("\n\t").append(wrapVariable(binding.toString(), ElementModifiers.BINDING));
+        }
+
+        if (!constraints.isEmpty() && Config.getInstance().isShowConstraints()) {
+            String constraintListStr = constraints.stream()
+                    .map(Constraint::getKey) // Extract keys
+                    .collect(Collectors.joining(","));
+            sb.append("\n\t").append("{field}<size:10>Constraint: ").append(constraintListStr).append("</size>");
+        }
+
+        return sb.toString();
     }
 }

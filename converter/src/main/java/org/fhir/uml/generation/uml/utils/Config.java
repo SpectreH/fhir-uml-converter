@@ -14,6 +14,8 @@ public final class Config {
     // Example of the newly added fields:
     private String view = "snapshot";       // can be "snapshot" or "differential"
     private boolean hideRemovedObjects = true; // default is true
+    private boolean showConstraints = true;
+    private boolean showBindings = true;
 
     // --- Private constructor (singleton) ---
     private Config() {
@@ -88,6 +90,16 @@ public final class Config {
                         config.hideRemovedObjects = Boolean.parseBoolean(args[++i]);
                     }
                     break;
+                case "--show_constraints":
+                    if (i + 1 < args.length) {
+                        config.showConstraints = Boolean.parseBoolean(args[++i]);
+                    }
+                    break;
+                case "--show_bindings":
+                    if (i + 1 < args.length) {
+                        config.showBindings = Boolean.parseBoolean(args[++i]);
+                    }
+                    break;
             }
         }
     }
@@ -129,6 +141,14 @@ public final class Config {
         return view.equalsIgnoreCase("differential");
     }
 
+    public boolean isShowConstraints() {
+        return showConstraints;
+    }
+
+    public boolean isShowBindnigs() {
+        return showBindings;
+    }
+
     // If you'd like to do fancy printing:
     public void print() {
         System.out.println("Config:");
@@ -140,5 +160,7 @@ public final class Config {
         System.out.println("  showHelp = " + showHelp);
         System.out.println("  view = " + view);
         System.out.println("  hideRemovedObjects = " + hideRemovedObjects);
+        System.out.println("  showConstraints = " + showConstraints);
+        System.out.println("  showBindings = " + showBindings);
     }
 }

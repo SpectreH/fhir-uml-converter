@@ -2,6 +2,7 @@ package org.fhir.uml.generation.uml.elements;
 
 import org.fhir.uml.generation.uml.types.CustomClassType;
 import org.fhir.uml.generation.uml.utils.Config;
+import org.fhir.uml.generation.uml.utils.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,7 +20,6 @@ public class UMLClass {
     private Config config = Config.getInstance();
 
     public UMLClass(String type, String name, Element mainElement, Element parentElement, boolean parentElementIsRemoved) {
-        this.title = String.format("%s (%s)", type, name);
         this.type = type;
         this.name = name;
         this.elements = new ArrayList<>();
@@ -43,10 +43,6 @@ public class UMLClass {
 
     public List<Element> getElements() {
         return elements;
-    }
-
-    public void updateTitle() {
-        this.title = String.format("%s (%s)", type, name);
     }
 
     public String getType() {
@@ -82,15 +78,19 @@ public class UMLClass {
     }
 
     public String getTitle() {
-        return title;
+        if (isChoiseOfTypeHeader()) {
+            return Utils.capitalize(name).replace("[x]", "");
+        }
+
+        if (this.isMainClass()) {
+            return String.format("%s (%s)", type, name);
+        }
+
+        return Utils.capitalize(name);
     }
 
     public void addElement(Element element) {
         this.elements.add(element);
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public void setType(String type) {
@@ -157,14 +157,10 @@ public class UMLClass {
     }
 
     public String matchTitle() {
-        String title = this.title;
+        String title = this.getTitle();
 
         if (this.isSliceHeader()) {
-            title = String.format("Slices for %s (%s)", this.name, this.parentElement.getName());
-        }
-
-        if (this.isChoiseOfTypeHeader()) {
-            title = String.format("%s", this.name);
+            title = String.format("Slices for %s (%s)", this.name, Utils.capitalize(this.parentElement.getName()).replace("[x]", ""));
         }
 
         return wrapDifferential(title);
@@ -245,12 +241,7 @@ public class UMLClass {
             groupElements.stream()
                     .filter(e -> (e.isChoiceOfTypeElement() || !e.isMain()))
                     .filter(e -> !config.isHideRemovedObjects() || !e.isRemoved())
-                    .forEach(e -> {
-                        sb.append("\t").append(e).append("\n");
-                        if (e.getBinding() != null) {
-                            sb.append("\t").append(e.getBinding()).append("\n");
-                        }
-                    });
+                    .forEach(e -> sb.append("\t").append(e).append("\n"));
         }
 
         sb.append("}\n");

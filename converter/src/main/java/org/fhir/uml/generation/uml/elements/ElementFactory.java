@@ -5,6 +5,7 @@ import org.hl7.fhir.instance.model.api.IBase;
 import org.hl7.fhir.r4.model.*;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,13 +15,15 @@ import java.util.Map;
  */
 public class ElementFactory {
     private final Map<String, String> fixedValues;
+    private Map<String, Constraint> constraints;
 
     /**
      * Конструктор, сохраняющий ссылку на Map для фиксированных значений
      * и на snapshot для добавления новых ElementDefinition.
      */
-    public ElementFactory(Map<String, String> fixedValues) {
+    public ElementFactory(Map<String, String> fixedValues, Map<String, Constraint> constraints) {
         this.fixedValues = fixedValues;
+        this.constraints = constraints;
     }
 
     /**
@@ -35,8 +38,6 @@ public class ElementFactory {
         // Extract name from element ID.
         String[] idParts = id.split("\\.|:");
         String extractedName = (idParts.length == 0) ? null : idParts[idParts.length - 1];
-//        System.out.println(id);
-
 
         // Cardinality
         Cardinality extractedCardinality = new Cardinality(
@@ -64,13 +65,21 @@ public class ElementFactory {
             visibility = ElementVisability.PROTECTED;
         }
 
-        Binding binding;
         if (!elementDefinition.getBinding().isEmpty()) {
             String strength = elementDefinition.getBinding().getStrength().getDisplay();
             String valueSet = elementDefinition.getBinding().getValueSet();
             elementBuilder.binding(new Binding(valueSet, strength));
         }
 
+        if (elementDefinition.getConstraint() != null) {
+            elementDefinition.getConstraint().forEach(c -> {
+                Constraint constraint = new Constraint(c.getKey(), c.getSeverity().getDisplay(), c.getHuman());
+                elementBuilder.addConstraint(constraint);
+                if (!this.constraints.containsKey(c.getKey())) {
+                    this.constraints.put(c.getKey(), constraint);
+                }
+            });
+        }
 
         // Build and return the Element
         return elementBuilder

@@ -27,6 +27,6 @@ public class Binding {
 
     @Override
     public String toString() {
-        return String.format("{field}<size:10><<<b>Binding</b>: %s (%s)>></size>", Element.getURLLastPath(valueSet), strength);
+        return String.format("{field}<size:10>Binding: %s (%s)</size>", Element.getURLLastPath(valueSet), strength);
     }
 }

@@ -7,8 +7,8 @@ public enum RelationShipType {
                 return switch (arrow) {
                         case "--" -> ASSOCIATION;
                         case "-->" -> DIRECTED_ASSOCIATION;
-                        case "--o" -> AGGREGATION;
-                        case "--*" -> COMPOSITION;
+                        case "o--" -> AGGREGATION;
+                        case "*--" -> COMPOSITION;
                         case "..>" -> DEPENDENCY;
                         case "1..*" -> MULTIPLICITY;
                         case "|--" -> INHERITANCE;
@@ -21,8 +21,8 @@ public enum RelationShipType {
                 return switch (this) {
                         case ASSOCIATION -> "--";
                         case DIRECTED_ASSOCIATION -> "-->";
-                        case AGGREGATION -> "--o";
-                        case COMPOSITION -> "--*";
+                        case AGGREGATION -> "o--";
+                        case COMPOSITION -> "*--";
                         case DEPENDENCY -> "..>";
                         case MULTIPLICITY -> "1..*";
                         case INHERITANCE -> "|--";
