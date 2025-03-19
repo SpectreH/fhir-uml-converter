@@ -22,6 +22,7 @@ public class ConverterController {
     }
 
     @PostMapping("/fhir2uml")
+    @CrossOrigin(origins = "*")
     public ResponseEntity<?> convertFhir2Uml(
             @RequestBody String body,
             @RequestHeader HttpHeaders httpHeaders

@@ -137,10 +137,6 @@ public class UMLClass {
             return CustomClassType.SLICES.toString();
         }
 
-        if (this.isChoiseOfTypeHeader()) {
-            return CustomClassType.CHOICE_OF_TYPES.toString();
-        }
-
         return sb.toString();
     }
 
@@ -158,9 +154,14 @@ public class UMLClass {
 
     public String matchTitle() {
         String title = this.getTitle();
+//        String name = "TEST";
+//
+//        if (this.parentElement != null) {
+//            name = parentElement.getName();
+//        }
 
         if (this.isSliceHeader()) {
-            title = String.format("Slices for %s (%s)", this.name, Utils.capitalize(this.parentElement.getName()).replace("[x]", ""));
+            title = String.format("Slices for %s (%s)", parentElement.getName(), Utils.capitalize(name).replace("[x]", ""));
         }
 
         return wrapDifferential(title);
@@ -199,28 +200,55 @@ public class UMLClass {
                 .append(matchCustomClass())
                 .append(" {\n");
 
-        // This map will hold groups -> list of elements
+        List<Element> copyElements = new ArrayList<>(elements);
+
         Map<String, List<Element>> groupMapper = new LinkedHashMap<>();
+
+        Map<String, List<Element>> predefinedGroupMapper = new LinkedHashMap<>();
+
+        Iterator<Element> iterator = copyElements.iterator();
+        while (iterator.hasNext()) {
+            Element element = iterator.next();
+            String group = element.getGroup();
+
+            // If we detect "predefined group" logic here, store these in the temporary map
+            if (group != null && !group.isEmpty() && element.getHasSliceName()) {
+                predefinedGroupMapper
+                        .computeIfAbsent(group, k -> new ArrayList<>())
+                        .add(element);
+
+                // Remove from copyElements so they aren't handled again below
+                iterator.remove();
+            }
+        }
 
         if (isSliceHeader()) {
             final String mainGroup = "Content/Rules for all slices";
             final String slicesGroup = "Slices";
-            Map<Boolean, List<Element>> partitionedMap = elements.stream()
+
+            Map<Boolean, List<Element>> partitionedMap = copyElements.stream()
                     .collect(Collectors.partitioningBy(Element::getHasSliceName));
 
             groupMapper.put(mainGroup, partitionedMap.getOrDefault(false, Collections.emptyList()));
             groupMapper.put(slicesGroup, partitionedMap.getOrDefault(true, Collections.emptyList()));
-        } else if (isChoiseOfTypeHeader()) {
-            final String mainGroup = "Content/Rules for all slices";
-            final String choisesGroup = "Types";
 
-            Map<Boolean, List<Element>> partitionedMap = elements.stream()
+        } else if (isChoiseOfTypeHeader()) {
+            final String mainGroup = "Content/Rules for all types";
+            final String choicesGroup = "Types";
+
+            Map<Boolean, List<Element>> partitionedMap = copyElements.stream()
                     .collect(Collectors.partitioningBy(Element::getChoiceOfTypeElement));
 
             groupMapper.put(mainGroup, partitionedMap.getOrDefault(false, Collections.emptyList()));
-            groupMapper.put(choisesGroup, partitionedMap.getOrDefault(true, Collections.emptyList()));
+            groupMapper.put(choicesGroup, partitionedMap.getOrDefault(true, Collections.emptyList()));
+
         } else {
-            groupMapper.put("", new ArrayList<>(elements));
+            // Fallback/no special grouping
+            groupMapper.put("", new ArrayList<>(copyElements));
+        }
+
+        for (Map.Entry<String, List<Element>> entry : predefinedGroupMapper.entrySet()) {
+            groupMapper.put(entry.getKey(), entry.getValue());
         }
 
         // Now use groupMapper to print out each group and the corresponding elements

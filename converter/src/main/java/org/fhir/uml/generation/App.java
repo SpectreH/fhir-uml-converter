@@ -55,20 +55,22 @@ public class App {
             );
 
             UML uml = new UML();
-            StructureDefinitionWrapper snapshotWrapper = new StructureDefinitionWrapper(structureDefinition, uml);
-            snapshotWrapper.processSnapshot();
-            snapshotWrapper.processDifferential();
+            StructureDefinitionWrapper structureDefinitionWrapper = new StructureDefinitionWrapper(structureDefinition, uml);
+            structureDefinitionWrapper.processSnapshot();
+            structureDefinitionWrapper.processDifferential();
 
             if (config.isDifferential()) {
-                snapshotWrapper.mapDifferentialElementsWithSnapshotElements();
-                snapshotWrapper.generateDifferentialUMLClasses();
+                structureDefinitionWrapper.mapDifferentialElementsWithSnapshotElements();
+                structureDefinitionWrapper.reduceDifferentialSliceClasses();
+                structureDefinitionWrapper.generateDifferentialUMLClasses();
             } else {
-                snapshotWrapper.generateSnapshotUMLClasses();
+                structureDefinitionWrapper.reduceSnapshotSliceClasses();
+                structureDefinitionWrapper.generateSnapshotUMLClasses();
             }
 
             uml.getMainClass().setName(Element.getURLLastPath(structureDefinition.getBaseDefinition()));
 
-            snapshotWrapper.generateUMLRelations();
+            structureDefinitionWrapper.generateUMLRelations();
 
             Legend legend = new Legend();
             legend.setXPosition(LegendPosition.XPosition.RIGHT);

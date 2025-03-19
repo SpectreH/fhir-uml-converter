@@ -3,12 +3,14 @@ package org.fhir.uml.generation.uml;
 import net.sourceforge.plantuml.StringUtils;
 import org.fhir.uml.generation.uml.elements.*;
 import org.fhir.uml.generation.uml.types.RelationShipType;
+import org.fhir.uml.generation.uml.utils.Utils;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r4.model.StructureDefinition.*;
 import org.hl7.fhir.r4.model.ElementDefinition;
 import org.hl7.fhir.r4.model.codesystems.Relationship;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class StructureDefinitionWrapper {
     private final UML uml;
@@ -20,11 +22,11 @@ public class StructureDefinitionWrapper {
 
     private final Map<String, String> fixedValues = new HashMap<>();
 
-    private final Map<String, List<Element>> snapshotTableMap = new LinkedHashMap<>();
-    private final Map<String, List<Element>> differentialTableMap = new LinkedHashMap<>();
+    private Map<String, List<Element>> snapshotTableMap = new LinkedHashMap<>();
+    private Map<String, List<Element>> differentialTableMap = new LinkedHashMap<>();
 
-    private final Map<String, Element> snapshotElementMapper = new LinkedHashMap<>();
-    private final Map<String, Element> differentialElementMapper = new LinkedHashMap<>();
+    private Map<String, Element> snapshotElementMapper = new LinkedHashMap<>();
+    private Map<String, Element> differentialElementMapper = new LinkedHashMap<>();
 
     private final ElementFactory factory;
 
@@ -56,6 +58,86 @@ public class StructureDefinitionWrapper {
                     firstElementProcessed
             );
         }
+    }
+
+    public void reduceSnapshotSliceClasses() {
+        Map<String, String> reduceMap = generateReduceMap(snapshotTableMap);
+        snapshotTableMap = transformMap(snapshotTableMap, reduceMap);
+        snapshotElementMapper = transformKeys(snapshotElementMapper, reduceMap);
+    }
+
+    public void reduceDifferentialSliceClasses() {
+        Map<String, String> reduceMap = generateReduceMap(differentialTableMap);
+        differentialTableMap = transformMap(differentialTableMap, reduceMap);
+        differentialElementMapper = transformKeys(differentialElementMapper, reduceMap);
+    }
+
+    private Map<String, String> generateReduceMap(Map<String, List<Element>> tableMap) {
+        return tableMap.entrySet().stream()
+                .filter(entry -> entry.getValue().stream().allMatch(Element::getHasSliceName))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> {
+                            int lastDotIndex = entry.getKey().lastIndexOf('.');
+                            return (lastDotIndex != -1) ? entry.getKey().substring(0, lastDotIndex) : entry.getKey();
+                        },
+                        (existing, replacement) -> existing, // Merge strategy (keep existing)
+                        LinkedHashMap::new // Preserve insertion order
+                ));
+    }
+
+    private static Map<String, List<Element>> transformMap(Map<String, List<Element>> originalMap, Map<String, String> renameMap) {
+        Map<String, List<Element>> transformedMap = new LinkedHashMap<>();
+        boolean changesApplied;
+
+        do {
+            changesApplied = false;
+            Map<String, List<Element>> tempMap = new LinkedHashMap<>();
+
+            for (Map.Entry<String, List<Element>> entry : originalMap.entrySet()) {
+                String oldKey = entry.getKey();
+                String newKey = renameMap.getOrDefault(oldKey, renameNestedKey(oldKey, renameMap));
+
+                // If key has changed, mark that changes were applied
+                if (!newKey.equals(oldKey)) {
+                    changesApplied = true;
+                }
+
+                // Merge elements if the key already exists in the transformed map
+                tempMap.computeIfAbsent(newKey, k -> new ArrayList<>()).addAll(entry.getValue());
+            }
+
+            originalMap = tempMap; // Update originalMap with the transformed map
+        } while (changesApplied); // Repeat until no more changes are detected
+
+        return originalMap;
+    }
+
+    private static Map<String, Element> transformKeys(Map<String, Element> originalMap, Map<String, String> renameMap) {
+        return originalMap.entrySet().stream().collect(Collectors.toMap(
+                entry -> renameMap.getOrDefault(entry.getKey(), renameNestedKey(entry.getKey(), renameMap)),
+                entry -> {
+                    Element element = entry.getValue();
+                    String newKey = renameMap.getOrDefault(entry.getKey(), renameNestedKey(entry.getKey(), renameMap));
+                    String removedPart = Utils.detectRemovedPathPart(element.getElementId(), newKey);
+                    if (!element.getElementId().equals(newKey) && !element.getName().equalsIgnoreCase(removedPart) && element.getHasSliceName()) {
+                        element.setGroup(String.format("Slices for %s", removedPart));
+                    }
+                    element.setId(newKey); // Ensure the Element ID is updated
+                    return element;
+                },
+                (existing, replacement) -> existing, // Keep existing element in case of conflict
+                LinkedHashMap::new // Maintain order
+        ));
+    }
+
+    private static String renameNestedKey(String key, Map<String, String> renameMap) {
+        for (Map.Entry<String, String> renameEntry : renameMap.entrySet()) {
+            if (key.startsWith(renameEntry.getKey() + ":")) {
+                return key.replace(renameEntry.getKey() + ":", renameEntry.getValue() + ":");
+            }
+        }
+        return key; // Return unchanged if no match found
     }
 
     public void generateSnapshotUMLClasses() {
@@ -108,15 +190,6 @@ public class StructureDefinitionWrapper {
                 parentParentElementId = parentElementId;
             }
         }
-//
-//        for (Map.Entry<String, List<Element>> entry : snapshotTableMap.entrySet()) {
-//            System.out.println(entry);
-//        }
-//
-//        System.out.println();
-//        for (Map.Entry<String, List<Element>> entry : differentialTableMap.entrySet()) {
-//            System.out.println(entry);
-//        }
     }
 
     private void generateUMLClasses(Map<String, List<Element>> tableMap, Map<String, Element> elementMapper) {
@@ -125,7 +198,7 @@ public class StructureDefinitionWrapper {
             Element umlElement = elementMapper.get(entry.getKey());
             Element parentUmlElement = elementMapper.get(umlElement.getParentId());
 
-            System.out.printf("Class Type: %s | Name: %s | Parent Element: %s \n", umlElement.getType(), umlElement.getName(), parentUmlElement.getElementId());
+//            System.out.printf("Class Type: %s | Name: %s | Parent Element: %s \n", umlElement.getType(), umlElement.getName(), parentUmlElement.getElementId());
             UMLClass umlClass = new UMLClass(umlElement.getType(), umlElement.getName(), umlElement, parentUmlElement, umlElement.isRemoved());
 
             if (!firstClassPassed) {

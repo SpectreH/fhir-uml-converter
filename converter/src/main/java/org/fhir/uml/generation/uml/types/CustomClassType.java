@@ -4,8 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum CustomClassType {
-    SLICES("S", "#FF7700", "Slices"),
-    CHOICE_OF_TYPES("C", "#1892ba", "Choise of Types");
+    SLICES("S", "#FF7700", "Slices");
 
     private final String letter;
     private final String color;

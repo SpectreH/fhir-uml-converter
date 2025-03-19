@@ -39,6 +39,7 @@ public class Element {
     private final List<ElementModifiers> differentialModifiers = new ArrayList<>();
     private Binding binding;
     private final List<Constraint> constraints;
+    private String group;
 
     // ---------------------------------------------------------------------------------------------
     // Private Constructor
@@ -75,6 +76,7 @@ public class Element {
         this.isMain = isMain;
         this.binding = binding;
         this.constraints = constraints;
+        this.group = "";
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -402,6 +404,14 @@ public class Element {
         return constraints;
     }
 
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
     // ---------------------------------------------------------------------------------------------
     // Additional Utilities
     // ---------------------------------------------------------------------------------------------
@@ -637,6 +647,18 @@ public class Element {
         return String.format("[%s..%s]",min,max);
     }
 
+    private String matchConstraints() {
+        StringBuilder sb = new StringBuilder();
+        if (!constraints.isEmpty() && Config.getInstance().isShowConstraints()) {
+            String constraintListStr = constraints.stream()
+                    .map(Constraint::getKey) // Extract keys
+                    .collect(Collectors.joining(","));
+            sb.append("<sup>(").append(constraintListStr).append(")</sup>");
+        }
+
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         if (isRemoved() && !Config.getInstance().isHideRemovedObjects()) {
@@ -652,24 +674,18 @@ public class Element {
         StringBuilder sb = new StringBuilder();
 
         sb.append(String.format(
-                "{field} %s %s : %s %s %s %s",
+                "{field} %s %s : %s %s %s %s%s",
                 matchVisibilitySymbol(),
                 wrapVariable(name, ElementModifiers.NAME),
                 wrapVariable(type, ElementModifiers.TYPE),
                 fixedValuePart,
                 matchCardinality(),
-                wrapVariable(description, ElementModifiers.DESCRIPTION)
+                wrapVariable(description, ElementModifiers.DESCRIPTION),
+                this.matchConstraints()
         ));
 
         if (binding != null && Config.getInstance().isShowBindnigs()) {
             sb.append("\n\t").append(wrapVariable(binding.toString(), ElementModifiers.BINDING));
-        }
-
-        if (!constraints.isEmpty() && Config.getInstance().isShowConstraints()) {
-            String constraintListStr = constraints.stream()
-                    .map(Constraint::getKey) // Extract keys
-                    .collect(Collectors.joining(","));
-            sb.append("\n\t").append("{field}<size:10>Constraint: ").append(constraintListStr).append("</size>");
         }
 
         return sb.toString();
