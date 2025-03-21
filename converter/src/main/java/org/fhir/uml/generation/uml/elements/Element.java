@@ -38,7 +38,7 @@ public class Element {
     private Boolean hasSliceName;
     private final List<ElementModifiers> differentialModifiers = new ArrayList<>();
     private Binding binding;
-    private final List<Constraint> constraints;
+    private List<Constraint> constraints;
     private String group;
 
     // ---------------------------------------------------------------------------------------------
@@ -600,6 +600,11 @@ public class Element {
         if (!Objects.equals(this.hasSliceName, source.hasSliceName)) {
             changes.add("hasSliceName: " + this.hasSliceName + " -> " + source.hasSliceName);
             this.hasSliceName = source.hasSliceName;
+        }
+
+        if (!Objects.equals(this.constraints, source.constraints)) {
+            changes.add("constraints: " + this.constraints + " -> " + source.constraints);
+            this.constraints = source.constraints;
         }
 
         // Optionally log differences

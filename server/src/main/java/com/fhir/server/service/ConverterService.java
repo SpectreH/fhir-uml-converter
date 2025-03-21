@@ -22,7 +22,9 @@ public class ConverterService {
     @Value("${converter.name.jar}")
     private String converterJarName;
 
-    private static final String PLANTUML_JAR = "plantuml.jar";
+    @Value("${plantuml.name.jar}")
+    private String PLANTUML_JAR = "plantuml.jar";
+
     private static final String INPUT_FILE_BASENAME = "input";
     private static final String OUTPUT_TEXT_BASENAME = "output";
 
@@ -123,7 +125,7 @@ public class ConverterService {
 
         ProcessBuilder pb;
         if (isPng) {
-            pb = new ProcessBuilder("java", "-jar", PLANTUML_JAR,
+                pb = new ProcessBuilder("java", "-jar", PLANTUML_JAR,
                     inputFile.toAbsolutePath().toString());
         } else {
             pb = new ProcessBuilder("java", "-jar", PLANTUML_JAR, inputFile.toAbsolutePath().toString(), "-tsvg");
