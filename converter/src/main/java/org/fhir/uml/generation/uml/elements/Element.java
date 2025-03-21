@@ -114,11 +114,16 @@ public class Element {
 
         String baseType = type.getCode();
 
-
         if (!type.getProfile().isEmpty() && "Extension".equals(baseType)) {
             CanonicalType profile = type.getProfile().getFirst();
             String lastSegment = getURLLastPath(profile.getValue());
             return "Extension" + (lastSegment.isEmpty() ? "" : "(" + lastSegment + ")");
+        }
+
+        if (!type.getProfile().isEmpty()) {
+            CanonicalType profile = type.getProfile().getFirst();
+            String lastSegment = getURLLastPath(profile.getValue());
+            return baseType + (lastSegment.isEmpty() ? "" : "(" + lastSegment + ")");
         }
 
         if ("Reference".equals(baseType)) {
