@@ -16,6 +16,8 @@ public final class Config {
     private boolean hideRemovedObjects = true; // default is true
     private boolean showConstraints = true;
     private boolean showBindings = true;
+    private boolean reduceSliceClasses = false;
+    private boolean hideLegend = false;
 
     // --- Private constructor (singleton) ---
     private Config() {
@@ -100,6 +102,16 @@ public final class Config {
                         config.showBindings = Boolean.parseBoolean(args[++i]);
                     }
                     break;
+                case "--reduce_slice_classes":
+                    if (i + 1 < args.length) {
+                        config.reduceSliceClasses = Boolean.parseBoolean(args[++i]);
+                    }
+                    break;
+                case "--hide_legend":
+                    if (i + 1 < args.length) {
+                        config.hideLegend = Boolean.parseBoolean(args[++i]);
+                    }
+                    break;
             }
         }
     }
@@ -147,6 +159,18 @@ public final class Config {
 
     public boolean isShowBindnigs() {
         return showBindings;
+    }
+
+    public boolean isShowBindings() {
+        return showBindings;
+    }
+
+    public boolean isReduceSliceClasses() {
+        return reduceSliceClasses;
+    }
+
+    public boolean isHideLegend() {
+        return hideLegend;
     }
 
     // If you'd like to do fancy printing:

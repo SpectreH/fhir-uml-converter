@@ -61,10 +61,14 @@ public class App {
 
             if (config.isDifferential()) {
                 structureDefinitionWrapper.mapDifferentialElementsWithSnapshotElements();
-                structureDefinitionWrapper.reduceDifferentialSliceClasses();
+                if (config.isReduceSliceClasses()) {
+                    structureDefinitionWrapper.reduceDifferentialSliceClasses();
+                }
                 structureDefinitionWrapper.generateDifferentialUMLClasses();
             } else {
-                structureDefinitionWrapper.reduceSnapshotSliceClasses();
+                if (config.isReduceSliceClasses()) {
+                    structureDefinitionWrapper.reduceSnapshotSliceClasses();
+                }
                 structureDefinitionWrapper.generateSnapshotUMLClasses();
             }
 
@@ -87,12 +91,14 @@ public class App {
                     .addRow("abstract", "false")
                     .addRow("baseDefinition", "http://hl7.org/fhir/StructureDefinition/Patient");
 
-            Legend.LegendGroup constraintGroup = legend.addGroup("Constraints");
-            constraintGroup.setHeader("Key", "Severity", "Human");
+            if (config.isShowConstraints()) {
+                Legend.LegendGroup constraintGroup = legend.addGroup("Constraints");
+                constraintGroup.setHeader("Key", "Severity", "Human");
 
-            uml.getConstraints().values().forEach(constraint -> {
-                constraintGroup.addRow(constraint.getKey(), constraint.getSeverity(), String.format("wrap2(\"%s\", 50)", constraint.getHuman()));
-            });
+                uml.getConstraints().values().forEach(constraint -> {
+                    constraintGroup.addRow(constraint.getKey(), constraint.getSeverity(), String.format("wrap2(\"%s\", 50)", constraint.getHuman()));
+                });
+            }
 
             uml.setLegend(legend);
 
