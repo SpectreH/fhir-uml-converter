@@ -226,7 +226,7 @@ Currently, the server provides a single endpoint:
 
 Converts a FHIR StructureDefinition to a UML diagram.
 
-### 🧾 Headers
+###  Headers
 
 | Header                          | Description |
 |----------------------------------|-------------|
