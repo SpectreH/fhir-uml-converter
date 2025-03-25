@@ -166,6 +166,86 @@ java -jar build/libs/fhir-uml-generation.jar \
   --output diagrams/generated-class-diagram.png
 ```
 
+## Building and Running the Server (Optional)
+
+The server provides a REST API that allows you to convert FHIR StructureDefinitions into UML diagrams via HTTP requests. To run the server, follow these steps:
+
+### 1. Build the Converter First
+
+Before building the server, make sure you’ve already built the **converter**:
+
+```bash
+cd converter
+./gradlew build
+```
+
+Once built, copy the resulting JAR file to the server directory:
+
+```bash
+cp build/libs/fhir-uml-generation.jar ../server/
+```
+
+### 2. Download the PlantUML JAR
+
+The server uses **PlantUML** to generate UML diagrams. You need to download the PlantUML JAR file:
+
+```bash
+cd ../server
+curl -L https://github.com/plantuml/plantuml/releases/download/v1.2025.2/plantuml-1.2025.2.jar -o plantuml.jar
+```
+
+This will download and rename the file to `plantuml.jar` in the server folder.
+
+### 3. Build the Server
+
+Now build the server project:
+
+```bash
+./gradlew build
+```
+
+This will generate `fhir-uml-converter.jar` in `server/build/libs/`.
+
+### 4. Run the Server
+
+You can now run the server:
+
+```bash
+java -jar build/libs/fhir-uml-converter.jar
+```
+
+The server will start and listen on port `8080` by default.
+
+---
+
+## Using the API
+
+Currently, the server provides a single endpoint:
+
+### `POST /api/fhir2uml`
+
+Converts a FHIR StructureDefinition to a UML diagram.
+
+**Example request:**
+
+```
+POST http://localhost:8080/api/fhir2uml
+Accept: application/json; view=snapshot
+Content-Type: application/json
+Content-Disposition: attachment; filename="patient-def.png"
+X-Hide-Removed-Objects: false
+X-Show-Constraints: false
+X-Show-Bindings: false
+X-Reduce-Slice-Classes: false
+X-Hide-Legend: false
+```
+
+**Body:**  
+Send a valid FHIR StructureDefinition JSON as the request body.
+
+**Response:**  
+Returns a UML class diagram (image/png) based on the input and headers.
+
 ## License
 
 This project is licensed under the **MIT** license.
