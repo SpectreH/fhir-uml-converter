@@ -259,6 +259,42 @@ Send a valid FHIR StructureDefinition JSON as the request body.
 **Response:**  
 Returns a UML class diagram (image/png) based on the input and headers.
 
+## Building and Running with Docker (Optional)
+
+This project includes a pre-configured Docker setup that automates the process of running the server with the converter and PlantUML.
+
+###  1. Build the Docker Image
+
+From the root of the project (where the `Dockerfile` is located), run:
+
+```bash
+docker build -t fhir-uml-server .
+```
+
+This command builds the image, including:
+
+- Running Gradle builds for both the converter and server
+- Downloading the required PlantUML JAR
+- Packaging everything into a single runtime image
+
+###  2. Run the Container with Docker Compose
+
+If you have a `docker-compose.yml` in the root, you can start the container using:
+
+```bash
+docker compose up -d
+```
+
+This will:
+
+- Start the container in detached mode
+- Expose the server on `localhost:8080` (by default)
+- Mount shared volumes (if defined)
+
+###  Notes
+
+- You don’t need to build the JARs manually — it’s all handled within the Docker image.
+
 ## License
 
 This project is licensed under the **MIT** license.
