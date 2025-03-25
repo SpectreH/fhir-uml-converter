@@ -5,71 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repo
-        uses: actions/checkout@v3
-      
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: 21
-
-      - name: Build converter
-        run: |
-          cd converter
-          ./gradlew clean build
-          ls -l build/libs
-      - name: Build server
-        run: |
-          cd server
-          ./gradlew clean build
-          ls -l build/libs
-          
-      - name: Upload converter artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: converter-build
-          path: converter/build/libs
-  
-      - name: Upload server artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-build
-          path: server/build/libs
-  
-  dockerize:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repo
-        uses: actions/checkout@v3
-  
-      - name: Download converter artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: converter-build
-          path: converter/build/libs
-  
-      - name: Download server artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: server-build
-          path: server/build/libs
-  
-      - name: Login to Docker Registry
-        run: |
-          echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
-
-      - name: Build & Push Image
-        run: |
-          docker build -t neeoo/fhir-server:latest .
-          docker push neeoo/fhir-server:latest
-          
   deploy:
-    needs: dockerize
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to VPS
@@ -80,6 +16,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
 
           script: |
-            cd /home/spectre/converter-project
-            docker compose pull
-            docker compose up -d --force-recreate
+            cd /home/spectre/fhir-uml-converter
+            git pull origin main
+            docker compose up -d --build --force-recreate
