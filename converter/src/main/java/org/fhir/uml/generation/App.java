@@ -23,7 +23,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         config = Config.fromArgs(args);
 
-        if (config.isShowHelp() || config.getInputFilePath() == null || config.getOutputFilePath() == null) {
+        if (config.isShowHelp() || config.getInputFilePath() == null || config.getOutputFilePath() == null || config.isSaveTxt() && config.getTxtOutputFilePath() == null) {
             printUsage();
             return;
         }
@@ -157,21 +157,41 @@ public class App {
     }
 
     private static void printUsage() {
+        System.out.println("FHIR UML Converter - Usage Guide");
+        System.out.println();
         System.out.println("Usage:");
-        System.out.println("  java -jar fhir-uml-transformer.jar --mode <uml|fhir> --input <input_file> --output <output_file> [--txt [<txt_filename>]]");
+        System.out.println("  java -jar fhir-uml-generation.jar \\");
+        System.out.println("       --input <input_file> \\");
+        System.out.println("       --output <output_file> \\");
+        System.out.println("       [--txt [<txt_output_file>]] \\");
+        System.out.println("       [--mode <uml|fhir>] \\");
+        System.out.println("       [--view <snapshot|differential>] \\");
+        System.out.println("       [--hide_removed_objects <true|false>] \\");
+        System.out.println("       [--show_constraints <true|false>] \\");
+        System.out.println("       [--show_bindings <true|false>] \\");
+        System.out.println("       [--reduce_slice_classes <true|false>] \\");
+        System.out.println("       [--hide_legend <true|false>] \\");
+        System.out.println("       [--help]");
         System.out.println();
         System.out.println("Modes:");
-        System.out.println("  uml (default): Transform FHIR StructureDefinition -> UML");
-        System.out.println("    --input   Path to the input FHIR StructureDefinition JSON file");
-        System.out.println("    --output  Path to the output UML PNG file");
-        System.out.println("    --txt     Also save the UML diagram in PlantUML text format. Optionally specify a custom .txt filename.");
+        System.out.println("  uml (default): Transform FHIR StructureDefinition -> UML diagram (PNG + optionally PlantUML .txt)");
+        System.out.println("    --input       Path to input FHIR StructureDefinition (JSON)");
+        System.out.println("    --output      Path to output UML diagram (PNG)");
+        System.out.println("    --txt         Optionally save PlantUML text format; you may provide a filename or it defaults to .txt next to PNG.");
         System.out.println();
         System.out.println("  fhir: Transform UML -> FHIR StructureDefinition");
-        System.out.println("    --input   Path to the input UML (PlantUML) .txt file");
-        System.out.println("    --output  Path to the output FHIR StructureDefinition JSON file (can use .json or .txt extension)");
-        System.out.println("    --txt     Not used in 'fhir' mode (ignored if specified).");
+        System.out.println("    --input       Path to UML in PlantUML text format (.txt)");
+        System.out.println("    --output      Output FHIR StructureDefinition (usually .json)");
+        System.out.println("    --txt         (ignored in this mode)");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --help   Show this help message");
+        System.out.println("  --view <snapshot|differential>       What elements need to generate from StructureDefinition. View mode used in UML generation (default: snapshot)");
+        System.out.println("  --hide_removed_objects <true|false>  Hide removed/unsupported FHIR objects (default: true)");
+        System.out.println("  --show_constraints <true|false>      Display FHIR constraints in diagram (default: true)");
+        System.out.println("  --show_bindings <true|false>         Show value set bindings (default: true)");
+        System.out.println("  --reduce_slice_classes <true|false>  Simplify representation of slices into fewer UML classes (default: false)");
+        System.out.println("  --hide_legend <true|false>           Hide the legend/notes section in UML output (default: false)");
+        System.out.println("  --help                               Show this help message and exit");
     }
+
 }
