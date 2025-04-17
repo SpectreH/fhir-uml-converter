@@ -10,11 +10,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: termx-server
+  IMAGE_NAME: fhir-uml-server
 
 defaults:
   run:
-    working-directory: ./termx-app
+    working-directory: ./
 
 jobs:
 
