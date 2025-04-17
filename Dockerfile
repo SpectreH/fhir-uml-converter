@@ -4,6 +4,8 @@ FROM gradle:8.7-jdk21-alpine AS build
 # Set base working directory
 WORKDIR /home/gradle/project
 
+ENV GRADLE_OPTS="-Dorg.gradle.vfs.watch=false"
+
 # Copy and build server
 COPY server /home/gradle/project/server
 WORKDIR /home/gradle/project/server
