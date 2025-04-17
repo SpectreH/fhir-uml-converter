@@ -20,16 +20,27 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      # -------- ①  Compile the JARs on the runner -----------------------------
-      - name: Set up Temurin 21 & Gradle cache
+      # —‑‑‑ Java + Gradle cache ­‑‑‑———————————————————
+      - name: Set up Temurin 21 and Gradle cache
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
 
-      - name: Build modules
-        run: ./gradlew :server:build :converter:build --no-daemon
+      # ---------- Build SERVER ------------------------------------------------
+      - name: Build server JAR
+        working-directory: ./server
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build --no-daemon
+
+      # ---------- Build CONVERTER --------------------------------------------
+      - name: Build converter JAR
+        working-directory: ./converter
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build --no-daemon
 
       # -------- ②  Build the image from the *already‑built* JARs --------------
       - name: Set up QEMU
