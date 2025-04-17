@@ -1,5 +1,5 @@
 # ---- Stage 1: Build with Gradle ----
-FROM gradle:8.7-jdk21-alpine AS build
+FROM gradle:8.7-jdk21 AS build
 
 # Set base working directory
 WORKDIR /home/gradle/project
